@@ -1,0 +1,57 @@
+<h1>📂 Uploaded Files</h1>
+
+<!-- Flash messages --><!-- Success messages -->
+{{#if success_msg}}
+  {{#each success_msg}}
+    <div class="flash-banner flash-success-banner">{{this}}</div>
+  {{/each}}
+{{/if}}
+
+<!-- Error messages -->
+{{#if error_msg}}
+  {{#each error_msg}}
+    <div class="flash-banner flash-error-banner">{{this}}</div>
+  {{/each}}
+{{/if}}
+
+
+{{#if files.length}}
+    <table class="file-list">
+        <thead>
+            <tr>
+                <th>Preview</th>
+                <th>Original Name</th>
+                <th>Stored Name</th>
+                <th>Type</th>
+                <th>Size (KB)</th>
+                <th>Uploaded</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{#each files}}
+                <tr>
+                    <td>
+                        {{#if (ifEq (fileTypeLabel mimetype) "Image")}}
+                            <img src="{{url}}" alt="{{originalName}}" width="80" />
+                        {{else}}
+                            <span class="file-icon">📄</span>
+                        {{/if}}
+                    </td>
+                    <td title="{{originalName}}">{{truncate originalName 30}}</td>
+                    <td title="{{filename}}">{{truncate filename 30}}</td>
+                    <td>{{fileTypeLabel mimetype}}</td>
+                    <td>{{formatKB size}}</td>
+                    <td>{{formatDate uploadedAt}}</td>
+                    <td>
+                        <form action="/files/delete/{{_id}}" method="POST">
+                            <button type="submit" class="delete-btn">🗑️ Delete</button>
+                        </form>
+                    </td>
+                </tr>
+            {{/each}}
+        </tbody>
+    </table>
+{{else}}
+    <p>No files have been uploaded yet.</p>
+{{/if}}
