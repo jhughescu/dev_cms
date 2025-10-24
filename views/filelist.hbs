@@ -1,19 +1,5 @@
 <h1>📂 Uploaded Files</h1>
 
-<!-- Flash messages --><!-- Success messages -->
-{{#if success_msg}}
-  {{#each success_msg}}
-    <div class="flash-banner flash-success-banner">{{this}}</div>
-  {{/each}}
-{{/if}}
-
-<!-- Error messages -->
-{{#if error_msg}}
-  {{#each error_msg}}
-    <div class="flash-banner flash-error-banner">{{this}}</div>
-  {{/each}}
-{{/if}}
-
 
 {{#if files.length}}
     <table class="file-list">
@@ -44,9 +30,9 @@
                     <td>{{formatKB size}}</td>
                     <td>{{formatDate uploadedAt}}</td>
                     <td>
-                        <form action="/files/delete/{{_id}}" method="POST">
-                            <button type="submit" class="delete-btn">🗑️ Delete</button>
-                        </form>
+                        <button type="button" class="delete-btn" data-id="{{_id}}">
+                            🗑️ Delete
+                        </button>
                     </td>
                 </tr>
             {{/each}}

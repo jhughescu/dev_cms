@@ -6,7 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{{title}}</title>
     <link rel="stylesheet" href="/css/style.css" />
-
 </head>
 
 <body>
@@ -15,17 +14,33 @@
         <nav>
             <a href="/">Home</a>
             <a href="/upload">Upload</a>
+            <a href="/files">Files</a>
         </nav>
     </header>
 
+    <!-- Flash messages container -->
+    <div id="flash-container">
+        {{#if success_msg}}
+            {{#each success_msg}}
+                <div class="flash-banner flash-success-banner">{{this}}</div>
+            {{/each}}
+        {{/if}}
+
+        {{#if error_msg}}
+            {{#each error_msg}}
+                <div class="flash-banner flash-error-banner">{{this}}</div>
+            {{/each}}
+        {{/if}}
+    </div>
+
     <main>
         {{{body}}}
-
     </main>
 
     <footer>
         <p>© {{year}} CMS Dev Build</p>
     </footer>
+
     <script type="module" src="/js/main.js"></script>
 </body>
 

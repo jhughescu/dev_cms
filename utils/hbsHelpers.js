@@ -37,4 +37,8 @@ module.exports = {
 
     // --- Check if value exists ---
     ifExists: (value) => !!value,
+
+    json: (context) => {
+        return JSON.stringify(context || []);
+    }
 };

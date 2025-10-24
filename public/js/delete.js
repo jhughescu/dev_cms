@@ -1,29 +1,36 @@
 // public/js/delete.js
+import {
+    addFlashMessage
+} from "./flash.js";
+
 export function initDeleteConfirmation() {
-    document.querySelectorAll("form[action*='/delete/']").forEach(form => {
-        form.addEventListener("submit", e => {
-            e.preventDefault();
+    const deleteButtons = document.querySelectorAll(".delete-btn");
 
-            // Create modal elements
-            const modal = document.createElement("div");
-            modal.className = "modal-overlay";
-            modal.innerHTML = `
-        <div class="modal">
-          <p>Are you sure you want to delete this file?</p>
-          <button class="confirm-btn">Yes</button>
-          <button class="cancel-btn">No</button>
-        </div>
-      `;
-            document.body.appendChild(modal);
+    deleteButtons.forEach(button => {
+        button.addEventListener("click", async () => {
+            const fileId = button.dataset.id;
+            const confirmed = confirm("Are you sure you want to delete this file?");
+            if (!confirmed) return;
 
-            // Confirm button
-            modal.querySelector(".confirm-btn").addEventListener("click", () => {
-                form.submit();
-                modal.remove();
-            });
+            try {
+                const res = await fetch(`/files/delete/${fileId}`, {
+                    method: "POST",
+                });
 
-            // Cancel button
-            modal.querySelector(".cancel-btn").addEventListener("click", () => modal.remove());
+                const data = await res.json();
+
+                if (data.success) {
+                    addFlashMessage(data.success, "success");
+                    // Remove the row from the table
+                    const row = button.closest("tr");
+                    if (row) row.remove();
+                } else if (data.error) {
+                    addFlashMessage(data.error, "error");
+                }
+            } catch (err) {
+                addFlashMessage("Failed to delete file.", "error");
+                console.error(err);
+            }
         });
     });
 }
