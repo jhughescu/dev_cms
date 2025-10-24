@@ -1,0 +1,8 @@
+@use "variables" as *;
+body {
+    font-family: $font-stack;
+    background-color: #f6f8fa;
+    color: #222;
+    margin: 0;
+    padding: 0;
+}

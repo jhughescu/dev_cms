@@ -20,7 +20,9 @@
     "scripts": {
         "test": "echo \"No tests specified\" && exit 0",
         "start": "NODE_ENV=production node app.js",
-        "dev": "nodemon app.js"
+        "dev": "nodemon app.js",
+        "build:css": "sass src/scss/main.scss public/css/style2.css --no-source-map --style=compressed",
+        "watch:css": "sass --watch src/scss/main.scss public/css/style2.css --no-source-map"
     },
     "repository": {
         "type": "git",
@@ -37,5 +39,8 @@
     "bugs": {
         "url": "https://github.com/jhughescu/dev_cms/issues"
     },
-    "homepage": "https://github.com/jhughescu/dev_cms#readme"
+    "homepage": "https://github.com/jhughescu/dev_cms#readme",
+    "devDependencies": {
+        "sass": "^1.93.2"
+    }
 }

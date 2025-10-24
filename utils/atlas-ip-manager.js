@@ -4,6 +4,7 @@ const {
 const fs = require("fs");
 const path = require("path");
 const config = require("../utils/config");
+console.log('hello');
 
 // Retry helper
 async function retry(fn, retries = 3, delay = 500) {
