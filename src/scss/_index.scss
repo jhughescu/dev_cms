@@ -1,1 +1,9 @@
-@use "variables" as *;
+// src/scss/_index.scss
+@forward "variables/variables";
+@forward "base";
+@forward "header";
+@forward "main";
+@forward "forms";
+@forward "tables";
+@forward "flash";
+@forward "modal";

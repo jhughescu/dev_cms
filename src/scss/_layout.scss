@@ -1,4 +1,4 @@
-@use "variables" as *;
+@use "./variables" as v;
 header {
     background-color: $primary-color;
     color: white;

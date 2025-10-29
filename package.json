@@ -1,28 +1,14 @@
 {
-    "dependencies": {
-        "axios": "^1.12.2",
-        "connect-flash": "^0.1.1",
-        "connect-mongo": "^5.1.0",
-        "digest-fetch": "^3.1.1",
-        "dotenv": "^17.2.3",
-        "express": "^5.1.0",
-        "express-handlebars": "^8.0.3",
-        "express-session": "^1.18.2",
-        "http-digest-client": "^0.0.3",
-        "mongodb-atlas-api-client": "^4.10.0",
-        "mongoose": "^8.18.3",
-        "multer": "^2.0.2"
-    },
     "name": "cms-test-build",
     "version": "1.0.0",
     "description": "A basic dev build for testing a Node CMS",
     "main": "app.js",
     "scripts": {
-        "test": "echo \"No tests specified\" && exit 0",
-        "start": "NODE_ENV=production node app.js",
-        "dev": "nodemon app.js",
-        "build:css": "sass src/scss/main.scss public/css/style2.css --no-source-map --style=compressed",
-        "watch:css": "sass --watch src/scss/main.scss public/css/style2.css --no-source-map"
+        "build:css": "sass src/scss/app.scss public/css/style.css --no-source-map --style=compressed",
+        "watch:css": "sass --watch src/scss/app.scss public/css/style.css --no-source-map --style=expanded",
+        "dev": "cross-env NODE_ENV=development concurrently \"npm run watch:css\" \"nodemon app.js\"",
+        "start": "npm run build:css && cross-env NODE_ENV=production node app.js",
+        "build": "npm run build:css"
     },
     "repository": {
         "type": "git",
@@ -40,7 +26,26 @@
         "url": "https://github.com/jhughescu/dev_cms/issues"
     },
     "homepage": "https://github.com/jhughescu/dev_cms#readme",
+    "dependencies": {
+        "axios": "^1.12.2",
+        "connect-flash": "^0.1.1",
+        "connect-mongo": "^5.1.0",
+        "digest-fetch": "^3.1.1",
+        "dotenv": "^17.2.3",
+        "express": "^5.1.0",
+        "express-handlebars": "^8.0.3",
+        "express-session": "^1.18.2",
+        "http-digest-client": "^0.0.3",
+        "mongodb-atlas-api-client": "^4.10.0",
+        "mongoose": "^8.18.3",
+        "multer": "^2.0.2",
+        "node-fetch": "^3.3.2"
+    },
     "devDependencies": {
+        "concurrently": "^9.2.1",
+        "cross-env": "^7.0.3",
+        "morgan": "^1.10.1",
+        "nodemon": "^3.1.10",
         "sass": "^1.93.2"
     }
 }

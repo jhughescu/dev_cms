@@ -1,0 +1,34 @@
+// src/scss/_header.scss
+@use "./variables" as v;
+
+header {
+  background-color: v.$primary-color;
+  color: white;
+  padding: 1rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+header h1 {
+  margin: 0;
+  font-size: 1.4rem;
+}
+
+nav a {
+  color: white;
+  text-decoration: none;
+  margin-left: 1rem;
+  font-weight: 500;
+}
+
+nav a:hover {
+  text-decoration: underline;
+}
+
+footer {
+  text-align: center;
+  color: v.$dark-grey;
+  padding: 1rem;
+  font-size: 0.9rem;
+}

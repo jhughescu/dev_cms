@@ -210,25 +210,77 @@ const handleDeleteV1 = async (req, res) => {
 // ----------------------
 const handleList = async (req, res) => {
     try {
-        const files = await File.find().sort({
-            uploadedAt: -1
-        }).lean();
+        // --- Parse query params ---
+        let {
+            page = 1,
+                limit = 5,
+                sort = "uploadedAt",
+                dir = "desc",
+                search = "",
+                type = ""
+        } = req.query;
 
-        // Consume flash messages here
+
+        limit = String(limit);
+
+        page = parseInt(page, 10);
+        if (isNaN(page) || page < 1) page = 1;
+
+        // Handle "All" option
+        const isAll = limit === "All" || limit === "all";
+        const numericLimit = isAll ? 0 : parseInt(limit, 10);
+
+        // --- Build filter object (NEW) ---
+        const filter = {};
+
+        // Search by filename (original name)
+        if (search && search.trim() !== "") {
+            filter.originalName = new RegExp(search.trim(), "i");
+        }
+
+        // Filter by type (uses mimetype partial match, e.g. "image", "pdf", etc.)
+        if (type && type !== "all" && type.trim() !== "") {
+            filter.mimetype = new RegExp(type.trim(), "i");
+        }
+
+        // --- Count total filtered files ---
+        const totalFiles = await File.countDocuments(filter);
+
+        // --- Compute total pages ---
+        const totalPages = isAll ? 1 : Math.ceil(totalFiles / numericLimit);
+
+        // --- Build sort object ---
+        const sortObj = {};
+        sortObj[sort] = dir === "asc" ? 1 : -1;
+
+        // --- Query files ---
+        let query = File.find(filter).sort(sortObj).lean();
+        if (!isAll) {
+            query = query.skip((page - 1) * numericLimit).limit(numericLimit);
+        }
+
+        const files = await query;
+
+        // --- Flash messages ---
         const successMsgs = req.flash("success_msg");
         const errorMsgs = req.flash("error_msg");
 
+        // --- Per-page options ---
+        const perPageOptions = ["5", "10", "20", "All"];
+        // --- Render view ---
         res.render("filelist", {
             title: "Uploaded Files",
             layout: "main",
             files,
+            currentPage: page,
+            totalPages,
+            limit,
+            perPageOptions,
+            sort,
+            dir,
+            query: req.query, // ensures filters persist in links/forms
             success_msg: successMsgs,
             error_msg: errorMsgs
-        });
-
-        console.log("🚦 Rendering /files with messages:", {
-            success: successMsgs,
-            error: errorMsgs,
         });
     } catch (err) {
         console.error("❌ Error loading files:", err);
@@ -240,6 +292,12 @@ const handleList = async (req, res) => {
         });
     }
 };
+
+
+
+
+
+
 
 
 

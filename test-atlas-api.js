@@ -1,25 +1,32 @@
-require("dotenv").config({ quiet: true });
-const { DigestClient } = require("digest-fetch"); // ← fix: use destructuring
+// test-atlas-ip.js
+const {
+    updateAtlasIP
+} = require("./utils/atlas-ip-manager");
+require("dotenv").config();
+
+//require("dotenv").config();
+
+console.log("Project ID:", process.env.ATLAS_PROJECT_ID);
+console.log("Public Key:", process.env.ATLAS_API_PUBLIC_KEY);
+console.log("Private Key:", process.env.ATLAS_API_PRIVATE_KEY ? "✅ Loaded" : "❌ Missing");
+
 
 (async () => {
-  try {
-    const projectId = process.env.ATLAS_PROJECT_ID;
-    const apiPublicKey = process.env.ATLAS_API_PUBLIC_KEY;
-    const apiPrivateKey = process.env.ATLAS_API_PRIVATE_KEY;
-
-    const client = new DigestClient(apiPublicKey, apiPrivateKey); // ← correct constructor
-    const url = `https://cloud.mongodb.com/api/atlas/v1.0/groups/${projectId}/accessList`;
-
-    console.log("🔍 Fetching Atlas Access List...");
-
-    const res = await client.fetch(url);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-
-    console.log("✅ Success! Access List:");
-    console.log(JSON.stringify(data, null, 2));
-  } catch (err) {
-    console.error("❌ Error calling Atlas API:");
-    console.error(err);
-  }
+    try {
+        const ip = await updateAtlasIP({
+            projectId: process.env.ATLAS_PROJECT_ID,
+            apiPublicKey: process.env.ATLAS_API_PUBLIC_KEY,
+            apiPrivateKey: process.env.ATLAS_API_PRIVATE_KEY,
+            removeOld: false, // safer for testing
+        });
+        console.log("✅ Test complete — current IP:", ip);
+    } catch (err) {
+        console.error("❌ Test failed:", err.message);
+    }
 })();
+
+
+
+
+
+

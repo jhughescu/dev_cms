@@ -1,5 +1,7 @@
 // app.js
-require("dotenv").config({ quiet: true });
+require("dotenv").config({
+    quiet: true
+});
 const express = require("express");
 const exphbs = require("express-handlebars");
 const session = require("express-session");
@@ -7,13 +9,29 @@ const flash = require("connect-flash");
 const MongoStore = require("connect-mongo");
 const path = require("path");
 
-const { connectDB, mongoose } = require("./controllers/databaseController");
+const {
+    connectDB,
+    mongoose
+} = require("./controllers/databaseController");
 const routes = require("./controllers/routeController");
 const hbsHelpers = require("./utils/hbsHelpers");
-const { updateAtlasIP } = require("./utils/atlas-ip-manager");
+const {
+    updateAtlasIP
+} = require("./utils/atlas-ip-manager");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Only load morgan in development
+if (process.env.NODE_ENV === "development") {
+    const morgan = require("morgan");
+    app.use(
+        morgan("dev", {
+            skip: (req, res) => res.statusCode < 400
+        })
+    );
+
+}
 
 (async function startServer() {
     try {
@@ -41,7 +59,9 @@ const PORT = process.env.PORT || 3000;
         app.set("views", path.join(__dirname, "views"));
 
         // 4️⃣ Middleware
-        app.use(express.urlencoded({ extended: true }));
+        app.use(express.urlencoded({
+            extended: true
+        }));
         app.use(express.json());
         app.use(express.static(path.join(__dirname, "public")));
 
@@ -68,7 +88,7 @@ const PORT = process.env.PORT || 3000;
 
         // 7️⃣ Start server
         app.listen(PORT, () =>
-            console.log(`🚀 Server running on http://localhost:${PORT}`)
+            console.log(`🚀 Server running in ${process.env.NODE_ENV || "development"} mode on http://localhost:${PORT}`)
         );
     } catch (err) {
         console.error("❌ Startup failed:", err);

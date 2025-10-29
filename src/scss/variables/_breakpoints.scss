@@ -1,0 +1,45 @@
+// src/scss/variables/_breakpoints.scss
+
+// Define named breakpoint values
+$breakpoints: (xs: 480px,
+    sm: 640px,
+    md: 768px,
+    lg: 1024px,
+    xl: 1280px);
+
+// Optional: expose individual variables
+$breakpoint-xs: map-get($breakpoints, xs);
+$breakpoint-sm: map-get($breakpoints, sm);
+$breakpoint-md: map-get($breakpoints, md);
+$breakpoint-lg: map-get($breakpoints, lg);
+$breakpoint-xl: map-get($breakpoints, xl);
+
+// Mixin for mobile-first media queries
+@mixin respond-to($size) {
+    $value: map-get($breakpoints, $size);
+
+    @if $value {
+        @media (max-width: #{$value}) {
+            @content;
+        }
+    }
+
+    @else {
+        @warn "⚠️ No breakpoint found for '#{$size}'. Check _breakpoints.scss.";
+    }
+}
+
+// Optional inverse mixin for desktop-first queries
+@mixin respond-from($size) {
+    $value: map-get($breakpoints, $size);
+
+    @if $value {
+        @media (min-width: #{$value}) {
+            @content;
+        }
+    }
+
+    @else {
+        @warn "⚠️ No breakpoint found for '#{$size}'. Check _breakpoints.scss.";
+    }
+}

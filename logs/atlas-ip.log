@@ -272,3 +272,200 @@
 [2025-10-24T09:00:32.541Z] ✅ IP unchanged since last run — skipping Atlas update
 [2025-10-24T09:47:44.266Z] 🌐 Current public IP: 62.49.22.24
 [2025-10-24T09:47:44.268Z] ✅ IP unchanged since last run — skipping Atlas update
+[2025-10-24T13:41:27.312Z] 🌐 Current public IP: 62.49.22.24
+[2025-10-24T13:41:27.315Z] ✅ IP unchanged since last run — skipping Atlas update
+[2025-10-24T13:53:09.101Z] 🌐 Current public IP: 62.49.22.24
+[2025-10-24T13:53:09.104Z] ✅ IP unchanged since last run — skipping Atlas update
+[2025-10-24T14:31:28.081Z] 🌐 Current public IP: 62.49.22.24
+[2025-10-24T14:31:28.084Z] ✅ IP unchanged since last run — skipping Atlas update
+[2025-10-24T14:53:40.721Z] 🌐 Current public IP: 62.49.22.24
+[2025-10-24T14:53:40.725Z] ✅ IP unchanged since last run — skipping Atlas update
+[2025-10-24T15:05:52.309Z] 🌐 Current public IP: 62.49.22.24
+[2025-10-24T15:05:52.312Z] ✅ IP unchanged since last run — skipping Atlas update
+[2025-10-24T15:08:50.976Z] 🌐 Current public IP: 62.49.22.24
+[2025-10-24T15:08:50.979Z] ✅ IP unchanged since last run — skipping Atlas update
+[2025-10-24T15:11:31.140Z] 🌐 Current public IP: 62.49.22.24
+[2025-10-24T15:11:31.142Z] ✅ IP unchanged since last run — skipping Atlas update
+[2025-10-24T15:13:00.645Z] 🌐 Current public IP: 62.49.22.24
+[2025-10-24T15:13:00.649Z] ✅ IP unchanged since last run — skipping Atlas update
+[2025-10-24T15:15:24.028Z] 🌐 Current public IP: 62.49.22.24
+[2025-10-24T15:15:24.031Z] ✅ IP unchanged since last run — skipping Atlas update
+[2025-10-24T15:18:25.730Z] 🌐 Current public IP: 62.49.22.24
+[2025-10-24T15:18:25.733Z] ✅ IP unchanged since last run — skipping Atlas update
+[2025-10-24T15:19:10.213Z] 🌐 Current public IP: 62.49.22.24
+[2025-10-24T15:19:10.215Z] ✅ IP unchanged since last run — skipping Atlas update
+[2025-10-24T15:20:38.004Z] 🌐 Current public IP: 62.49.22.24
+[2025-10-24T15:20:38.007Z] ✅ IP unchanged since last run — skipping Atlas update
+[2025-10-24T15:21:53.282Z] 🌐 Current public IP: 62.49.22.24
+[2025-10-24T15:21:53.285Z] ✅ IP unchanged since last run — skipping Atlas update
+[2025-10-27T14:58:26.002Z] 🌐 Current public IP: 5.148.97.51
+[2025-10-27T14:58:26.018Z] 📡 IP has changed — updating MongoDB Atlas access list...
+[2025-10-27T14:58:26.796Z] ❌ Failed to update Atlas whitelist after retries: Failed to fetch access list (403)
+[2025-10-27T14:59:03.793Z] 🌐 Current public IP: 5.148.97.51
+[2025-10-27T14:59:03.796Z] 📡 IP has changed — updating MongoDB Atlas access list...
+[2025-10-27T14:59:04.400Z] ❌ Failed to update Atlas whitelist after retries: Failed to fetch access list (403)
+[2025-10-27T15:31:24.751Z] 🌐 Current public IP: 5.148.97.51
+[2025-10-27T15:31:24.757Z] 📡 IP has changed — updating MongoDB Atlas access list...
+[2025-10-27T15:31:25.761Z] ❌ Failed to update Atlas whitelist after retries: Failed to fetch access list (403)
+[2025-10-27T15:31:35.086Z] 🌐 Current public IP: 5.148.97.51
+[2025-10-27T15:31:35.089Z] 📡 IP has changed — updating MongoDB Atlas access list...
+[2025-10-27T15:31:35.664Z] ❌ Failed to update Atlas whitelist after retries: Failed to fetch access list (403)
+[2025-10-27T15:31:43.709Z] 🌐 Current public IP: 5.148.97.51
+[2025-10-27T15:31:43.712Z] 📡 IP has changed — updating MongoDB Atlas access list...
+[2025-10-27T15:31:44.409Z] ❌ Failed to update Atlas whitelist after retries: Failed to fetch access list (403)
+[2025-10-27T18:12:03.473Z] 🌐 Current public IP: 148.252.140.82
+[2025-10-27T18:12:03.476Z] 📡 IP has changed — updating MongoDB Atlas access list...
+[2025-10-27T18:12:04.344Z] ❌ Failed to update Atlas whitelist after retries: Failed to fetch access list (403)
+[2025-10-27T19:11:21.890Z] 🌐 Current public IP: 148.252.140.82
+[2025-10-27T19:11:21.895Z] 📡 IP has changed — updating MongoDB Atlas access list...
+[2025-10-27T19:11:23.327Z] ✅ Added 148.252.140.82 to Atlas whitelist
+[2025-10-27T19:11:23.670Z] 🧹 Removed old IP: 62.49.22.24
+[2025-10-27T19:11:23.674Z] 💾 Cached current IP (148.252.140.82) in .cached-ip.json
+[2025-10-27T19:53:21.840Z] 🌐 Current public IP: 148.252.140.82
+[2025-10-27T19:53:21.857Z] ✅ IP unchanged since last run — skipping Atlas update
+[2025-10-27T19:55:40.002Z] 🌐 Current public IP: 148.252.140.82
+[2025-10-27T19:55:40.006Z] ✅ IP unchanged since last run — skipping Atlas update
+[2025-10-27T20:01:16.136Z] 🌐 Current public IP: 148.252.140.82
+[2025-10-27T20:01:16.141Z] ✅ IP unchanged since last run — skipping Atlas update
+[2025-10-27T20:04:17.587Z] 🌐 Current public IP: 148.252.140.82
+[2025-10-27T20:04:17.591Z] ✅ IP unchanged since last run — skipping Atlas update
+[2025-10-28T09:03:10.058Z] 🌐 Current public IP: 62.49.22.24
+[2025-10-28T09:03:10.065Z] 📡 IP has changed — updating MongoDB Atlas access list...
+[2025-10-28T09:03:10.831Z] ✅ Added 62.49.22.24 to Atlas whitelist
+[2025-10-28T09:03:11.003Z] 🧹 Removed old IP: 148.252.140.82
+[2025-10-28T09:03:11.009Z] 💾 Cached current IP (62.49.22.24) in .cached-ip.json
+[2025-10-28T09:35:50.276Z] 🌐 Current public IP: 62.49.22.24
+[2025-10-28T09:35:50.282Z] ✅ IP unchanged since last run — skipping Atlas update
+[2025-10-28T09:47:50.426Z] 🌐 Current public IP: 62.49.22.24
+[2025-10-28T09:47:50.431Z] ✅ IP unchanged since last run — skipping Atlas update
+[2025-10-28T09:49:40.516Z] 🌐 Current public IP: 62.49.22.24
+[2025-10-28T09:49:40.519Z] ✅ IP unchanged since last run — skipping Atlas update
+[2025-10-28T09:53:31.550Z] 🌐 Current public IP: 62.49.22.24
+[2025-10-28T09:53:31.553Z] ✅ IP unchanged since last run — skipping Atlas update
+[2025-10-28T09:54:46.115Z] 🌐 Current public IP: 62.49.22.24
+[2025-10-28T09:54:46.117Z] ✅ IP unchanged since last run — skipping Atlas update
+[2025-10-28T10:01:16.849Z] 🌐 Current public IP: 62.49.22.24
+[2025-10-28T10:01:16.852Z] ✅ IP unchanged since last run — skipping Atlas update
+[2025-10-28T10:04:35.169Z] 🌐 Current public IP: 62.49.22.24
+[2025-10-28T10:04:35.173Z] ✅ IP unchanged since last run — skipping Atlas update
+[2025-10-28T10:06:31.964Z] 🌐 Current public IP: 62.49.22.24
+[2025-10-28T10:06:31.970Z] ✅ IP unchanged since last run — skipping Atlas update
+[2025-10-28T10:14:45.793Z] 🌐 Current public IP: 62.49.22.24
+[2025-10-28T10:14:45.796Z] ✅ IP unchanged since last run — skipping Atlas update
+[2025-10-28T10:16:35.421Z] 🌐 Current public IP: 62.49.22.24
+[2025-10-28T10:16:35.424Z] ✅ IP unchanged since last run — skipping Atlas update
+[2025-10-28T10:17:36.854Z] 🌐 Current public IP: 62.49.22.24
+[2025-10-28T10:17:36.857Z] ✅ IP unchanged since last run — skipping Atlas update
+[2025-10-28T10:18:11.920Z] 🌐 Current public IP: 62.49.22.24
+[2025-10-28T10:18:11.924Z] ✅ IP unchanged since last run — skipping Atlas update
+[2025-10-28T10:18:25.968Z] 🌐 Current public IP: 62.49.22.24
+[2025-10-28T10:18:25.971Z] ✅ IP unchanged since last run — skipping Atlas update
+[2025-10-28T10:24:35.267Z] 🌐 Current public IP: 62.49.22.24
+[2025-10-28T10:24:35.271Z] ✅ IP unchanged since last run — skipping Atlas update
+[2025-10-28T10:30:01.395Z] 🌐 Current public IP: 62.49.22.24
+[2025-10-28T10:30:01.400Z] ✅ IP unchanged since last run — skipping Atlas update
+[2025-10-28T10:31:03.333Z] 🌐 Current public IP: 62.49.22.24
+[2025-10-28T10:31:03.335Z] ✅ IP unchanged since last run — skipping Atlas update
+[2025-10-28T10:36:52.770Z] 🌐 Current public IP: 62.49.22.24
+[2025-10-28T10:36:52.773Z] ✅ IP unchanged since last run — skipping Atlas update
+[2025-10-28T10:44:33.644Z] 🌐 Current public IP: 62.49.22.24
+[2025-10-28T10:44:33.647Z] ✅ IP unchanged since last run — skipping Atlas update
+[2025-10-28T10:49:28.886Z] 🌐 Current public IP: 62.49.22.24
+[2025-10-28T10:49:28.890Z] ✅ IP unchanged since last run — skipping Atlas update
+[2025-10-28T10:50:08.558Z] 🌐 Current public IP: 62.49.22.24
+[2025-10-28T10:50:08.561Z] ✅ IP unchanged since last run — skipping Atlas update
+[2025-10-28T10:50:30.274Z] 🌐 Current public IP: 62.49.22.24
+[2025-10-28T10:50:30.279Z] ✅ IP unchanged since last run — skipping Atlas update
+[2025-10-28T10:55:37.980Z] 🌐 Current public IP: 62.49.22.24
+[2025-10-28T10:55:37.983Z] ✅ IP unchanged since last run — skipping Atlas update
+[2025-10-28T11:09:22.962Z] 🌐 Current public IP: 62.49.22.24
+[2025-10-28T11:09:22.965Z] ✅ IP unchanged since last run — skipping Atlas update
+[2025-10-28T11:14:26.239Z] 🌐 Current public IP: 62.49.22.24
+[2025-10-28T11:14:26.247Z] ✅ IP unchanged since last run — skipping Atlas update
+[2025-10-28T11:21:08.310Z] 🌐 Current public IP: 62.49.22.24
+[2025-10-28T11:21:08.316Z] ✅ IP unchanged since last run — skipping Atlas update
+[2025-10-28T12:13:11.772Z] 🌐 Current public IP: 62.49.22.24
+[2025-10-28T12:13:11.775Z] ✅ IP unchanged since last run — skipping Atlas update
+[2025-10-28T12:17:05.192Z] 🌐 Current public IP: 62.49.22.24
+[2025-10-28T12:17:05.195Z] ✅ IP unchanged since last run — skipping Atlas update
+[2025-10-28T12:23:15.183Z] 🌐 Current public IP: 62.49.22.24
+[2025-10-28T12:23:15.188Z] ✅ IP unchanged since last run — skipping Atlas update
+[2025-10-28T12:23:17.075Z] 🌐 Current public IP: 62.49.22.24
+[2025-10-28T12:23:17.079Z] ✅ IP unchanged since last run — skipping Atlas update
+[2025-10-28T13:22:56.068Z] 🌐 Current public IP: 62.49.22.24
+[2025-10-28T13:22:56.071Z] ✅ IP unchanged since last run — skipping Atlas update
+[2025-10-28T13:26:22.659Z] 🌐 Current public IP: 62.49.22.24
+[2025-10-28T13:26:22.665Z] ✅ IP unchanged since last run — skipping Atlas update
+[2025-10-28T13:53:14.025Z] 🌐 Current public IP: 62.49.22.24
+[2025-10-28T13:53:14.030Z] ✅ IP unchanged since last run — skipping Atlas update
+[2025-10-28T14:03:48.051Z] 🌐 Current public IP: 62.49.22.24
+[2025-10-28T14:03:48.055Z] ✅ IP unchanged since last run — skipping Atlas update
+[2025-10-28T14:16:39.475Z] 🌐 Current public IP: 62.49.22.24
+[2025-10-28T14:16:39.478Z] ✅ IP unchanged since last run — skipping Atlas update
+[2025-10-28T14:19:10.766Z] 🌐 Current public IP: 62.49.22.24
+[2025-10-28T14:19:10.769Z] ✅ IP unchanged since last run — skipping Atlas update
+[2025-10-28T14:27:31.261Z] 🌐 Current public IP: 62.49.22.24
+[2025-10-28T14:27:31.265Z] ✅ IP unchanged since last run — skipping Atlas update
+[2025-10-28T14:29:40.335Z] 🌐 Current public IP: 62.49.22.24
+[2025-10-28T14:29:40.339Z] ✅ IP unchanged since last run — skipping Atlas update
+[2025-10-28T16:29:13.343Z] 🌐 Current public IP: 62.56.15.12
+[2025-10-28T16:29:13.346Z] 📡 IP has changed — updating MongoDB Atlas access list...
+[2025-10-28T16:29:14.134Z] ❌ Forbidden (403): API access denied.
+💡 Your current IP (62.56.15.12) is not allowed to access the API.
+🧠 Fix: Add this IP to the API key's access list in Atlas.
+[2025-10-28T16:29:14.152Z] ❌ Failed to update Atlas whitelist after retries: ❌ Forbidden (403): API access denied.
+💡 Your current IP (62.56.15.12) is not allowed to access the API.
+🧠 Fix: Add this IP to the API key's access list in Atlas.
+[2025-10-28T16:30:20.073Z] 🌐 Current public IP: 62.56.15.12
+[2025-10-28T16:30:20.076Z] 📡 IP has changed — updating MongoDB Atlas access list...
+[2025-10-28T16:30:20.666Z] ❌ Forbidden (403): API access denied.
+💡 Your current IP (62.56.15.12) is not allowed to access the API.
+🧠 Fix: Add this IP to the API key's access list in Atlas.
+[2025-10-28T16:30:20.687Z] ❌ Failed to update Atlas whitelist after retries: ❌ Forbidden (403): API access denied.
+💡 Your current IP (62.56.15.12) is not allowed to access the API.
+🧠 Fix: Add this IP to the API key's access list in Atlas.
+[2025-10-28T16:32:11.918Z] 🌐 Current public IP: 62.56.15.12
+[2025-10-28T16:32:11.921Z] 📡 IP has changed — updating MongoDB Atlas access list...
+[2025-10-28T16:32:12.899Z] ✅ Added 62.56.15.12 to Atlas whitelist
+[2025-10-28T16:32:13.073Z] 🧹 Removed old IP: 62.49.22.24
+[2025-10-28T16:32:13.078Z] 💾 Cached current IP (62.56.15.12) in .cached-ip.json
+[2025-10-28T16:32:36.245Z] 🌐 Current public IP: 62.56.15.12
+[2025-10-28T16:32:36.248Z] ✅ IP unchanged since last run — skipping Atlas update
+[2025-10-28T16:41:29.780Z] 🌐 Current public IP: 62.56.15.12
+[2025-10-28T16:41:29.783Z] ✅ IP unchanged since last run — skipping Atlas update
+[2025-10-28T16:53:06.658Z] 🌐 Current public IP: 62.56.15.12
+[2025-10-28T16:53:06.661Z] ✅ IP unchanged since last run — skipping Atlas update
+[2025-10-28T16:53:34.582Z] 🌐 Current public IP: 62.56.15.12
+[2025-10-28T16:53:34.587Z] ✅ IP unchanged since last run — skipping Atlas update
+[2025-10-28T16:54:02.481Z] 🌐 Current public IP: 62.56.15.12
+[2025-10-28T16:54:02.487Z] ✅ IP unchanged since last run — skipping Atlas update
+[2025-10-28T16:54:32.372Z] 🌐 Current public IP: 62.56.15.12
+[2025-10-28T16:54:32.375Z] ✅ IP unchanged since last run — skipping Atlas update
+[2025-10-28T17:07:43.099Z] 🌐 Current public IP: 62.56.15.12
+[2025-10-28T17:07:43.102Z] ✅ IP unchanged since last run — skipping Atlas update
+[2025-10-28T17:08:56.145Z] 🌐 Current public IP: 62.56.15.12
+[2025-10-28T17:08:56.148Z] ✅ IP unchanged since last run — skipping Atlas update
+[2025-10-28T17:09:31.228Z] 🌐 Current public IP: 62.56.15.12
+[2025-10-28T17:09:31.234Z] ✅ IP unchanged since last run — skipping Atlas update
+[2025-10-28T17:16:29.815Z] 🌐 Current public IP: 62.56.15.12
+[2025-10-28T17:16:29.817Z] ✅ IP unchanged since last run — skipping Atlas update
+[2025-10-29T09:42:23.567Z] 🌐 Current public IP: 62.56.15.12
+[2025-10-29T09:42:23.588Z] ✅ IP unchanged since last run — skipping Atlas update
+[2025-10-29T09:46:30.345Z] 🌐 Current public IP: 62.56.15.12
+[2025-10-29T09:46:30.347Z] ✅ IP unchanged since last run — skipping Atlas update
+[2025-10-29T09:47:53.982Z] 🌐 Current public IP: 62.56.15.12
+[2025-10-29T09:47:53.985Z] ✅ IP unchanged since last run — skipping Atlas update
+[2025-10-29T09:49:13.937Z] 🌐 Current public IP: 62.56.15.12
+[2025-10-29T09:49:13.939Z] ✅ IP unchanged since last run — skipping Atlas update
+[2025-10-29T09:49:47.461Z] 🌐 Current public IP: 62.56.15.12
+[2025-10-29T09:49:47.465Z] ✅ IP unchanged since last run — skipping Atlas update
+[2025-10-29T09:50:38.971Z] 🌐 Current public IP: 62.56.15.12
+[2025-10-29T09:50:38.974Z] ✅ IP unchanged since last run — skipping Atlas update
+[2025-10-29T10:09:20.358Z] 🌐 Current public IP: 62.56.15.12
+[2025-10-29T10:09:20.360Z] ✅ IP unchanged since last run — skipping Atlas update
+[2025-10-29T10:11:45.145Z] 🌐 Current public IP: 62.56.15.12
+[2025-10-29T10:11:45.148Z] ✅ IP unchanged since last run — skipping Atlas update
+[2025-10-29T10:11:46.814Z] 🌐 Current public IP: 62.56.15.12
+[2025-10-29T10:11:46.817Z] ✅ IP unchanged since last run — skipping Atlas update
+[2025-10-29T10:12:34.336Z] 🌐 Current public IP: 62.56.15.12
+[2025-10-29T10:12:34.339Z] ✅ IP unchanged since last run — skipping Atlas update

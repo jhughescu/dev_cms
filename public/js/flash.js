@@ -1,5 +1,5 @@
 // public/js/flash.js
-console.log("flash.js loaded");
+//console.log("flash.js loaded");
 
 /**
  * Smoothly fade out and remove a flash element

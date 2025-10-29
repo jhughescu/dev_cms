@@ -1,35 +1,95 @@
-<h1>📂 Uploaded Files</h1>
+<div class="filelist-header">
+    <h1>📂 Uploaded Files</h1>
 
+    {{!-- Reset Sort button --}}
+    {{#if (or sort dir)}}
+        <a class="reset-sort-btn" href="{{buildQueryUrl '/files' (mergeQuery query 'sort' '' 'dir' '')}}">
+            Reset Sort
+        </a>
+    {{/if}}
+
+    {{!-- Filter / Search Form --}}
+    <form method="GET" action="/files" class="filter-bar">
+        <input type="text" name="search" placeholder="Search by name" value="{{query.search}}">
+
+        <select name="type">
+            <option value="all">All Types</option>
+            <option value="image" {{#ifEq (toLower query.type) "image"}}selected{{/ifEq}}>Images</option>
+            <option value="pdf" {{#ifEq (toLower query.type) "pdf"}}selected{{/ifEq}}>PDFs</option>
+            <option value="doc" {{#ifEq (toLower query.type) "doc"}}selected{{/ifEq}}>Documents</option>
+        </select>
+
+        <button type="submit">Filter</button>
+        <a href="/files" class="reset">Reset</a>
+
+        {{!-- Preserve sort and per-page --}}
+        <input type="hidden" name="sort" value="{{sort}}">
+        <input type="hidden" name="dir" value="{{dir}}">
+        <input type="hidden" name="limit" value="{{limit}}">
+    </form>
+</div>
 
 {{#if files.length}}
+
+    <!-- Results per page selector -->
+    <div class="pagination-controls">
+        <label for="perPage">Show:</label>
+        <select id="perPage" onchange="changeLimit(this.value)">
+            {{#each perPageOptions}}
+                <option value="{{this}}" {{#if (ifEq ../limit this)}}selected{{/if}}>{{this}}</option>
+            {{/each}}
+        </select>
+    </div>
+
+    <!-- File list table -->
     <table class="file-list">
         <thead>
             <tr>
-                <th>Preview</th>
-                <th>Original Name</th>
-                <th>Stored Name</th>
-                <th>Type</th>
-                <th>Size (KB)</th>
-                <th>Uploaded</th>
-                <th>Actions</th>
+                <th class="col-preview">Preview</th>
+                <th class="col-name-orig">
+                    <a href="{{buildQueryUrl '/files' (mergeQuery query 'sort' 'originalName' 'dir' (nextDir sort dir 'originalName'))}}">
+                        Original Name {{sortArrow sort dir 'originalName'}}
+                    </a>
+                </th>
+                <th class="col-name-stored">
+                    <a href="{{buildQueryUrl '/files' (mergeQuery query 'sort' 'filename' 'dir' (nextDir sort dir 'filename'))}}">
+                        Stored Name {{sortArrow sort dir 'filename'}}
+                    </a>
+                </th>
+                <th class="col-type">
+                    <a href="{{buildQueryUrl '/files' (mergeQuery query 'sort' 'mimetype' 'dir' (nextDir sort dir 'mimetype'))}}">
+                        Type {{sortArrow sort dir 'mimetype'}}
+                    </a>
+                </th>
+                <th class="col-size">
+                    <a href="{{buildQueryUrl '/files' (mergeQuery query 'sort' 'size' 'dir' (nextDir sort dir 'size'))}}">
+                        Size (KB) {{sortArrow sort dir 'size'}}
+                    </a>
+                </th>
+                <th class="col-uploaded">
+                    <a href="{{buildQueryUrl '/files' (mergeQuery query 'sort' 'uploadedAt' 'dir' (nextDir sort dir 'uploadedAt'))}}">
+                        Uploaded {{sortArrow sort dir 'uploadedAt'}}
+                    </a>
+                </th>
+                <th class="col-actions">Actions</th>
             </tr>
         </thead>
         <tbody>
             {{#each files}}
                 <tr>
-                    <td>
+                    <td class="col-preview">
                         {{#if (ifEq (fileTypeLabel mimetype) "Image")}}
                             <img src="{{url}}" alt="{{originalName}}" width="80" />
                         {{else}}
                             <span class="file-icon">📄</span>
                         {{/if}}
                     </td>
-                    <td title="{{originalName}}">{{truncate originalName 30}}</td>
-                    <td title="{{filename}}">{{truncate filename 30}}</td>
-                    <td>{{fileTypeLabel mimetype}}</td>
-                    <td>{{formatKB size}}</td>
-                    <td>{{formatDate uploadedAt}}</td>
-                    <td>
+                    <td class="col-name-orig" title="{{originalName}}">{{truncate originalName 30}}</td>
+                    <td class="col-name-stored" title="{{filename}}">{{truncate filename 30}}</td>
+                    <td class="col-type">{{fileTypeLabel mimetype}}</td>
+                    <td class="col-size">{{formatKB size}}</td>
+                    <td class="col-uploaded">{{formatDate uploadedAt}}</td>
+                    <td class="col-actions">
                         <button type="button" class="delete-btn" data-id="{{_id}}">
                             🗑️ Delete
                         </button>
@@ -38,6 +98,33 @@
             {{/each}}
         </tbody>
     </table>
+
+    <!-- Pagination links -->
+    {{#if (gt totalPages 1)}}
+        <nav class="pagination">
+            {{#each (range 1 totalPages)}}
+                <a href="{{buildQueryUrl '/files' (mergeQuery ../query 'page' this)}}" class="{{#if (ifEq this ../currentPage)}}active{{/if}}">
+                    {{this}}
+                </a>
+            {{/each}}
+        </nav>
+    {{/if}}
+
 {{else}}
     <p>No files have been uploaded yet.</p>
 {{/if}}
+
+<script>
+    function changeLimit(val) {
+        const url = new URL(window.location.href);
+        const params = url.searchParams;
+
+        params.set('limit', val);
+        params.set('page', 1); // reset to first page
+
+        // Preserve all other filters/sorting automatically
+        url.search = params.toString();
+        window.location.href = url.toString();
+    }
+
+</script>
