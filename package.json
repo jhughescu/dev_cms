@@ -8,7 +8,8 @@
         "watch:css": "sass --watch src/scss/app.scss public/css/style.css --no-source-map --style=expanded",
         "dev": "cross-env NODE_ENV=development concurrently \"npm run watch:css\" \"nodemon app.js\"",
         "start": "npm run build:css && cross-env NODE_ENV=production node app.js",
-        "build": "npm run build:css"
+        "build": "npm run build:css",
+        "clean:uploads": "node utils/cleanUploadsAndDB.js"
     },
     "repository": {
         "type": "git",
@@ -30,16 +31,21 @@
         "axios": "^1.12.2",
         "connect-flash": "^0.1.1",
         "connect-mongo": "^5.1.0",
+        "cookie-parser": "^1.4.7",
         "digest-fetch": "^3.1.1",
         "dotenv": "^17.2.3",
         "express": "^5.1.0",
         "express-handlebars": "^8.0.3",
         "express-session": "^1.18.2",
         "http-digest-client": "^0.0.3",
+        "image-size": "^2.0.2",
         "mongodb-atlas-api-client": "^4.10.0",
         "mongoose": "^8.18.3",
         "multer": "^2.0.2",
-        "node-fetch": "^3.3.2"
+        "node-fetch": "^3.3.2",
+        "pdf-parse": "^2.4.5",
+        "qrcode": "^1.5.4",
+        "socket.io": "^4.8.1"
     },
     "devDependencies": {
         "concurrently": "^9.2.1",

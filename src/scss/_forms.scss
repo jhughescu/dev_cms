@@ -1,6 +1,6 @@
 // src/scss/_forms.scss
 @use "sass:color";
-@use "./variables" as v;
+@use "./variables"as v;
 
 form {
     display: flex;
@@ -28,4 +28,11 @@ button {
         // Modern replacement for lighten()
         background-color: color.adjust(v.$primary-color, $lightness: 10%);
     }
+}
+
+select {
+    border: 1px solid #ccc;
+    padding: 0.5rem;
+    border-radius: 6px;
+    background: #fafafa;
 }

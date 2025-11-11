@@ -1,28 +1,23 @@
 // app.js
-require("dotenv").config({
-    quiet: true
-});
+require("dotenv").config({ quiet: true });
 const express = require("express");
 const exphbs = require("express-handlebars");
 const session = require("express-session");
 const flash = require("connect-flash");
 const MongoStore = require("connect-mongo");
 const path = require("path");
+const http = require("http");                            // ✅ NEW
 
-const {
-    connectDB,
-    mongoose
-} = require("./controllers/databaseController");
+const { connectDB, mongoose } = require("./controllers/databaseController");
+const { initSocket } = require("./controllers/socketController");
 const routes = require("./controllers/routeController");
 const hbsHelpers = require("./utils/hbsHelpers");
-const {
-    updateAtlasIP
-} = require("./utils/atlas-ip-manager");
+const { updateAtlasIP } = require("./utils/atlas-ip-manager");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Only load morgan in development
+// ✅ Development logging
 if (process.env.NODE_ENV === "development") {
     const morgan = require("morgan");
     app.use(
@@ -30,12 +25,11 @@ if (process.env.NODE_ENV === "development") {
             skip: (req, res) => res.statusCode < 400
         })
     );
-
 }
 
 (async function startServer() {
     try {
-        // 1️⃣ Ensure Atlas IP is whitelisted
+        // 1️⃣ Auto-whitelist IP for MongoDB Atlas
         await updateAtlasIP({
             projectId: process.env.ATLAS_PROJECT_ID,
             apiPublicKey: process.env.ATLAS_API_PUBLIC_KEY,
@@ -46,7 +40,7 @@ if (process.env.NODE_ENV === "development") {
         // 2️⃣ Connect to MongoDB
         await connectDB();
 
-        // 3️⃣ Configure Handlebars
+        // 3️⃣ Setup Handlebars
         app.engine(
             "hbs",
             exphbs.engine({
@@ -59,13 +53,11 @@ if (process.env.NODE_ENV === "development") {
         app.set("views", path.join(__dirname, "views"));
 
         // 4️⃣ Middleware
-        app.use(express.urlencoded({
-            extended: true
-        }));
+        app.use(express.urlencoded({ extended: true }));
         app.use(express.json());
         app.use(express.static(path.join(__dirname, "public")));
 
-        // 5️⃣ Session + Flash
+        // 5️⃣ Sessions + Flash
         app.use(
             session({
                 secret: process.env.SESSION_SECRET || "supersecretkey",
@@ -80,16 +72,20 @@ if (process.env.NODE_ENV === "development") {
         );
         app.use(flash());
 
-        // ⚠️ Do NOT consume flash messages globally.
-        // Only handle flash in controllers when rendering views.
-
-        // 6️⃣ Mount routes
+        // 6️⃣ Routes
         app.use("/", routes);
 
-        // 7️⃣ Start server
-        app.listen(PORT, () =>
-            console.log(`🚀 Server running in ${process.env.NODE_ENV || "development"} mode on http://localhost:${PORT}`)
-        );
+        // ✅✅✅ 7️⃣ Create HTTP server (instead of app.listen)
+        const httpServer = http.createServer(app);
+
+        // ✅ Initialise Socket.IO on the HTTP server
+        initSocket(httpServer);
+
+        // ✅ Start listening
+        httpServer.listen(PORT, () => {
+            console.log(`🚀 Server running on http://localhost:${PORT}`);
+        });
+
     } catch (err) {
         console.error("❌ Startup failed:", err);
         process.exit(1);

@@ -1,7 +1,36 @@
 <h2>Upload a File</h2>
 
 <form id="upload-form" action="/upload" method="POST" enctype="multipart/form-data">
-    <label for="file">Choose a file:</label>
-    <input type="file" name="file" id="file" required />
+    <div class="form-group">
+        <label for="file">Choose a file:</label>
+        <input type="file" name="file" id="file" required />
+    </div>
+
+    <div class="form-group">
+        <label for="project">Project:</label>
+        <input type="text" name="project" id="project" placeholder="cms" required />
+    </div>
+
+    <div class="form-group">
+        <label for="instance">Instance:</label>
+        <input type="text" name="instance" id="instance" value="main" required />
+    </div>
+
+    <div class="form-group">
+        <label for="category">Category (optional):</label>
+        <select name="category" id="category">
+            <option value="">None</option>
+            <option value="hero-image">Hero Image</option>
+            <option value="avatar">Avatar</option>
+            <option value="document">Document</option>
+            <option value="media">Media</option>
+            <option value="other">Other</option>
+        </select>
+    </div>
+<div class="form-group">
+    {{!-- Optional developer uploader field --}}
+    <input type="text" name="uploadedBy" value="{{devUploader}}" />
+    </div>
+
     <button type="submit">Upload</button>
 </form>

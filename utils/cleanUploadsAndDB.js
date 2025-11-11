@@ -1,7 +1,7 @@
-//require("dotenv").config({
-//    path: "../.env"
-//});
-require("dotenv").config({ quiet: true });
+// utils/cleanUploadsAndDB.js
+require("dotenv").config({
+    quiet: true
+});
 const mongoose = require("mongoose");
 const fs = require("fs");
 const path = require("path");
@@ -13,10 +13,56 @@ const rl = readline.createInterface({
     output: process.stdout,
 });
 
+// Recursively print folder tree with project/instance highlighting and file counts
+function printTree(dir, prefix = "", isRoot = true) {
+    if (!fs.existsSync(dir)) return;
+
+    const entries = fs.readdirSync(dir).sort();
+    entries.forEach((entry, idx) => {
+        const fullPath = path.join(dir, entry);
+        const isLast = idx === entries.length - 1;
+        const pointer = isLast ? "└── " : "├── ";
+
+        if (fs.statSync(fullPath).isDirectory()) {
+            // Count number of files under this directory (recursively)
+            const fileCount = countFiles(fullPath);
+
+            if (isRoot) {
+                console.log(`${pointer}📁 Project: ${entry} (${fileCount} files)`);
+            } else if (prefix === "│   " || prefix === "    ") {
+                console.log(`${prefix}${pointer}🗂️ Instance: ${entry} (${fileCount} files)`);
+            } else {
+                console.log(`${prefix}${pointer}${entry}`);
+            }
+
+            const newPrefix = prefix + (isLast ? "    " : "│   ");
+            printTree(fullPath, newPrefix, false);
+        } else {
+            // Regular file
+            console.log(`${prefix}${pointer}${entry}`);
+        }
+    });
+}
+
+// Helper to count files recursively in a directory
+function countFiles(dir) {
+    let count = 0;
+    if (!fs.existsSync(dir)) return count;
+    const entries = fs.readdirSync(dir);
+    entries.forEach((entry) => {
+        const fullPath = path.join(dir, entry);
+        if (fs.statSync(fullPath).isDirectory()) {
+            count += countFiles(fullPath);
+        } else {
+            count += 1;
+        }
+    });
+    return count;
+}
+
 async function confirmAndRun() {
     const env = process.env.NODE_ENV || "development";
 
-    // Prevent accidental production cleanup
     if (env === "production") {
         console.log("🚫 Refusing to run cleanup in production mode.");
         rl.close();
@@ -25,20 +71,26 @@ async function confirmAndRun() {
 
     console.log(`🧩 Environment: ${env}`);
 
-    // Use only your defined variables
-    const uri =
-        env === "production" ?
-        process.env.MONGODB_URI_PROD // production URI
-        :
-        process.env.MONGODB_URI_DEV; // development URI
+    const uri = env === "production" ?
+        process.env.MONGODB_URI_PROD :
+        process.env.MONGODB_URI_DEV;
+
     if (!uri) {
         console.error("❌ MongoDB URI not found in .env file.");
         rl.close();
         process.exit(1);
     }
 
+    const uploadsDir = path.resolve(__dirname, "../uploads");
+    console.log("\n📂 Current uploads folder structure (projects / instances) with file counts:");
+    if (fs.existsSync(uploadsDir)) {
+        printTree(uploadsDir);
+    } else {
+        console.log("ℹ️ Uploads folder does not exist");
+    }
+
     rl.question(
-        "⚠️  This will DELETE all uploaded files and database records. Continue? (y/N): ",
+        "\n⚠️  This will DELETE all uploaded files (recursively) and database records. Continue? (y/N): ",
         async (answer) => {
             const proceed = answer.trim().toLowerCase() === "y";
 
@@ -51,47 +103,43 @@ async function confirmAndRun() {
             try {
                 console.log("\n🧹 Starting cleanup...");
 
-                // 1️⃣ Connect to MongoDB
+                // --- Connect to MongoDB ---
                 await mongoose.connect(uri);
                 console.log(`✅ Connected to MongoDB (${env})`);
 
-                // 2️⃣ Delete all File records
+                // --- Delete all File records ---
                 const result = await File.deleteMany({});
                 const deletedRecords = result.deletedCount;
                 console.log(`🗑️ Deleted ${deletedRecords} file record(s) from DB`);
 
-                // 3️⃣ Clear uploads folder
-                const uploadsDir = path.resolve(__dirname, "../uploads");
-                let deletedFiles = 0;
-
+                // --- Clear uploads folder recursively ---
                 if (fs.existsSync(uploadsDir)) {
-                    const files = fs.readdirSync(uploadsDir);
-                    if (files.length > 0) {
-                        files.forEach((file) => fs.unlinkSync(path.join(uploadsDir, file)));
-                        deletedFiles = files.length;
-                    }
-                    console.log(
-                        deletedFiles > 0 ?
-                        `🧾 Deleted ${deletedFiles} file(s) from uploads folder` :
-                        "ℹ️ No files to delete in uploads folder"
-                    );
-                } else {
-                    fs.mkdirSync(uploadsDir);
-                    console.log("📁 uploads folder created");
+                    fs.rmSync(uploadsDir, {
+                        recursive: true,
+                        force: true
+                    });
+                    console.log("🧹 All uploads deleted recursively");
                 }
 
-                // 4️⃣ Summary report
+                // --- Recreate empty uploads folder ---
+                fs.mkdirSync(uploadsDir, {
+                    recursive: true
+                });
+                console.log("📁 Empty uploads folder recreated");
+
+                // --- Summary report ---
                 console.log("\n📊 Cleanup Summary:");
                 console.log(`   Environment: ${env}`);
                 console.log(`   Mongo URI: ${uri}`);
                 console.log(`   DB records deleted: ${deletedRecords}`);
-                console.log(`   Files deleted: ${deletedFiles}`);
+                console.log(`   Uploads folder cleared`);
 
-                // 5️⃣ Done
+                // --- Disconnect and exit ---
                 await mongoose.disconnect();
                 console.log("\n✅ Cleanup complete!");
                 rl.close();
                 process.exit(0);
+
             } catch (err) {
                 console.error("❌ Cleanup failed:", err);
                 rl.close();
@@ -101,4 +149,9 @@ async function confirmAndRun() {
     );
 }
 
-confirmAndRun();
+// Only run if executed directly
+if (require.main === module) {
+    confirmAndRun();
+}
+
+module.exports = confirmAndRun;

@@ -40,6 +40,9 @@
             {{/each}}
         </select>
     </div>
+    <div class="meta-toggle-all">
+        <button type="button" id="toggle-all-btn">Expand All Metadata</button>
+    </div>
 
     <!-- File list table -->
     <table class="file-list">
@@ -76,7 +79,7 @@
         </thead>
         <tbody>
             {{#each files}}
-                <tr>
+                <tr class="file-row" data-file-id="{{_id}}">
                     <td class="col-preview">
                         {{#if (ifEq (fileTypeLabel mimetype) "Image")}}
                             <img src="{{url}}" alt="{{originalName}}" width="80" />
@@ -84,17 +87,83 @@
                             <span class="file-icon">📄</span>
                         {{/if}}
                     </td>
-                    <td class="col-name-orig" title="{{originalName}}">{{truncate originalName 30}}</td>
-                    <td class="col-name-stored" title="{{filename}}">{{truncate filename 30}}</td>
+                    <td class="col-name-orig" title="{{originalName}}">{{truncate originalName 15}}</td>
+                    <td class="col-name-stored" title="{{filename}}">{{truncate filename 15}}</td>
                     <td class="col-type">{{fileTypeLabel mimetype}}</td>
                     <td class="col-size">{{formatKB size}}</td>
                     <td class="col-uploaded">{{formatDate uploadedAt}}</td>
                     <td class="col-actions">
-                        <button type="button" class="delete-btn" data-id="{{_id}}">
-                            🗑️ Delete
-                        </button>
+                        <button type="button" class="meta-toggle-btn" data-target="{{_id}}">ℹ️</button>
+                        <button type="button" class="delete-btn" data-id="{{_id}}">🗑️</button>
                     </td>
                 </tr>
+
+                <tr id="meta-{{_id}}" class="meta-row">
+                    <td colspan="7">
+                        <div class="meta-content">
+                            <div class="meta-grid">
+                                <div><strong>Uploaded By:</strong>
+                                    <span class="{{#unless uploadedBy}}placeholder{{/unless}}">
+                                        {{#if uploadedBy}}{{uploadedBy}}{{else}}superuser{{/if}}
+                                    </span>
+                                </div>
+                                <div><strong>Project:</strong>
+                                    <span class="{{#unless project}}placeholder{{/unless}}">
+                                        {{#if project}}{{project}}{{else}}cms{{/if}}
+                                    </span>
+                                </div>
+                                <div><strong>Instance:</strong>
+                                    <span class="{{#unless instance}}placeholder{{/unless}}">
+                                        {{#if instance}}{{instance}}{{else}}main{{/if}}
+                                    </span>
+                                </div>
+                                <div><strong>Category:</strong>
+                                    <span class="{{#unless category}}placeholder{{/unless}}">
+                                        {{#if category}}{{category}}{{else}}none{{/if}}
+                                    </span>
+                                </div>
+                                <div><strong>Safe Filename:</strong>
+                                    <span class="{{#unless safeFilename}}placeholder{{/unless}}">
+                                        {{#if safeFilename}}{{safeFilename}}{{else}}N/A{{/if}}
+                                    </span>
+                                </div>
+                                <div><strong>Path:</strong>
+                                    <span class="{{#unless path}}placeholder{{/unless}}">
+                                        {{#if path}}{{path}}{{else}}N/A{{/if}}
+                                    </span>
+                                </div>
+                                <div><strong>Hash:</strong>
+                                    <span class="{{#unless hash}}placeholder{{/unless}}">
+                                        {{#if hash}}{{hash}}{{else}}N/A{{/if}}
+                                    </span>
+                                </div>
+                                <div><strong>Detected Type:</strong>
+                                    <span class="{{#unless detectedType}}placeholder{{/unless}}">
+                                        {{#if detectedType}}{{detectedType}}{{else}}Other{{/if}}
+                                    </span>
+                                </div>
+                                <div><strong>Encoding:</strong>
+                                    <span class="{{#unless encoding}}placeholder{{/unless}}">
+                                        {{#if encoding}}{{encoding}}{{else}}binary{{/if}}
+                                    </span>
+                                </div>
+                                <div><strong>Dimensions:</strong>
+                                    <span class="{{#unless dimensions}}placeholder{{/unless}}">
+                                        {{#if dimensions}}{{dimensions}}{{else}}N/A{{/if}}
+                                    </span>
+                                </div>
+                                <div><strong>Stored URL:</strong>
+                                    <a href="{{url}}" target="_blank">{{url}}</a>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+
+
+
+
+
             {{/each}}
         </tbody>
     </table>
@@ -113,18 +182,4 @@
 {{else}}
     <p>No files have been uploaded yet.</p>
 {{/if}}
-
-<script>
-    function changeLimit(val) {
-        const url = new URL(window.location.href);
-        const params = url.searchParams;
-
-        params.set('limit', val);
-        params.set('page', 1); // reset to first page
-
-        // Preserve all other filters/sorting automatically
-        url.search = params.toString();
-        window.location.href = url.toString();
-    }
-
-</script>
+<script type="module" src="/js/filelist.js"></script>

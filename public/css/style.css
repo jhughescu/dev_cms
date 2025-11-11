@@ -96,6 +96,14 @@ button:hover {
   background-color: rgb(58.0205479452, 78.2602739726, 138.9794520548);
 }
 
+select {
+  border: 1px solid #ccc;
+  padding: 0.5rem;
+  border-radius: 6px;
+  background: #fafafa;
+}
+
+/* --- Table base styles --- */
 table {
   width: 100%;
   border-collapse: collapse;
@@ -125,6 +133,7 @@ td.actions {
   text-align: right;
 }
 
+/* --- Buttons --- */
 .delete-btn {
   background-color: #c0392b;
   color: white;
@@ -135,11 +144,11 @@ td.actions {
   font-size: 0.9rem;
   transition: background-color 0.2s ease;
 }
-
 .delete-btn:hover {
   background-color: #e74c3c;
 }
 
+/* --- Responsive column visibility --- */
 @media (max-width: 1280px) {
   .col-name-stored {
     display: none;
@@ -160,6 +169,7 @@ td.actions {
     display: none;
   }
 }
+/* --- Sort + reset controls --- */
 .sort-reset {
   margin: 0 0 1em 0;
   text-align: right;
@@ -179,6 +189,7 @@ td.actions {
   color: #000;
 }
 
+/* --- Header bar above file list --- */
 .filelist-header {
   display: flex;
   justify-content: space-between;
@@ -200,6 +211,7 @@ td.actions {
   background-color: #aaa;
 }
 
+/* --- Pagination --- */
 .pagination {
   display: flex;
   gap: 0.5rem;
@@ -221,6 +233,89 @@ td.actions {
 .pagination a:hover {
   background-color: #384c82;
   color: white;
+}
+
+/* --- Metadata toggle button --- */
+.meta-toggle-btn {
+  background-color: #3498db;
+  color: white;
+  border: none;
+  padding: 0.4rem 0.6rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: background-color 0.2s ease;
+}
+.meta-toggle-btn:hover {
+  background-color: #2980b9;
+}
+
+/* --- Metadata rows + staggered animation --- */
+.meta-row {
+  background: #fafafa;
+  font-size: 0.7rem;
+  color: #333;
+}
+.meta-row td {
+  padding: 0;
+}
+.meta-row .meta-content {
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  padding: 0 1rem;
+  transition: max-height 0.28s ease, opacity 0.28s ease, padding 0.28s ease;
+}
+.meta-row .meta-content.visible {
+  max-height: 600px;
+  opacity: 1;
+  padding: 0.6rem 1rem;
+}
+.meta-row .meta-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.3rem 1rem;
+  padding: 0.5rem 0;
+  word-break: break-all;
+}
+.meta-row .meta-grid div {
+  white-space: normal;
+}
+.meta-row .meta-grid div.placeholder {
+  color: #999; /* greyed out for default/missing values */
+  font-style: italic;
+}
+.meta-row .meta-grid a {
+  color: #2b3a67;
+  text-decoration: underline;
+  font-size: 0.7rem;
+}
+
+/* --- Toggle all metadata button --- */
+.meta-toggle-all {
+  display: flex;
+  justify-content: flex-end;
+  margin: 0.5rem 0 1rem 0;
+}
+.meta-toggle-all #toggle-all-btn {
+  background-color: #6c63ff;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: background-color 0.2s ease;
+}
+.meta-toggle-all #toggle-all-btn:hover {
+  background-color: #554fd1;
+}
+.meta-toggle-all #toggle-all-btn.animating {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.meta-toggle-all #toggle-all-btn:disabled {
+  pointer-events: none;
 }
 
 #flash-container {

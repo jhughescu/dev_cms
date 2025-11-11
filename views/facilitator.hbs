@@ -1,0 +1,83 @@
+<h1>{{title}}</h1>
+
+<p>Select an asset to send to all students:</p>
+
+<div id="file-list">
+    {{#if files.length}}
+        <ul>
+            {{#each files}}
+                <div class="file-item">
+                    <span>{{this.originalName}}</span>
+                    <button onclick='sendAsset({
+            url: "{{this.url}}",
+            mimetype: "{{this.mimetype}}",
+            originalName: "{{this.originalName}}",
+            size: "{{this.size}}",
+            uploadedBy: "{{this.uploadedBy}}"
+        })'>Send to Students</button>
+                </div>
+            {{/each}}
+
+        </ul>
+    {{else}}
+        <p>No files available.</p>
+    {{/if}}
+</div>
+
+<div id="status"></div>
+
+<hr />
+
+<p><strong>Session ID:</strong> <span id="sessionId">classroom1</span></p>
+<button id="reset-session-btn">Reset Session</button>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+    const socket = io();
+    const sessionId = "classroom1";
+
+    //    socket.emit("joinSession", {
+    //        sessionId,
+    //        type: "facilitator"
+    //    });
+    socket.emit("joinSession", {
+        sessionId: "classroom1",
+        type: "facilitator",
+        username: "JohnDoe"
+    });
+
+    // Called when facilitator clicks an asset in the dashboard
+    function sendAsset(asset) {
+        const payload = {
+            sessionId,
+            asset: {
+                url: asset.url,
+                mimetype: asset.mimetype,
+                originalName: asset.originalName,
+                size: asset.size,
+                uploadedBy: asset.uploadedBy,
+            }
+        };
+
+        console.log("Sending asset to students:", payload);
+
+        socket.emit("sendAsset", payload);
+    }
+
+
+    document.getElementById("reset-session-btn").addEventListener("click", () => {
+        if (confirm("This will reset the session and disconnect students. Continue?")) {
+            socket.emit("resetSession", {
+                sessionId
+            });
+        }
+    });
+
+    socket.on("sessionReset", () => {
+        console.log("Session was reset.");
+        alert("Session has been reset.");
+        // Clear dashboard UI
+        document.getElementById("file-list").innerHTML = "";
+    });
+
+</script>

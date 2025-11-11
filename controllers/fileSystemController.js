@@ -3,16 +3,37 @@ const multer = require("multer");
 const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
-const File = require("../models/metadataModel");
+const {
+    imageSize
+} = require("image-size");
+//const pdfParse = require("pdf-parse");
 
-// Configure multer for local storage
+const File = require("../models/metadataModel");
+const {
+    getUploadPath
+} = require("../utils/uploadPath");
+const {
+    sanitiseInput
+} = require("../utils/sanitiseInput");
+
+// ----------------------
+// Multer configuration
+// ----------------------
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, "uploads/");
+        const {
+            project = "cms", instance = "main"
+        } = req.body;
+        const uploadDir = getUploadPath(project, instance, "uploads");
+        cb(null, uploadDir);
     },
     filename: (req, file, cb) => {
-        cb(null, `${Date.now()}-${file.originalname}`);
-    },
+        const ext = path.extname(file.originalname).toLowerCase();
+        const base = path.basename(file.originalname, ext);
+        const safeBase = sanitiseInput(base);
+        const uniqueName = `${Date.now()}-${safeBase}${ext}`;
+        cb(null, uniqueName);
+    }
 });
 
 const upload = multer({
@@ -20,13 +41,23 @@ const upload = multer({
 });
 
 // ----------------------
-// Handle file upload with hashing and duplicate detection
+// Helper: detect type
+// ----------------------
+function getDetectedType(mimetype) {
+    if (!mimetype) return "Other";
+    if (mimetype.startsWith("image/")) return "Image";
+    if (mimetype === "application/pdf") return "PDF Document";
+    if (mimetype.startsWith("text/")) return "Text";
+    return "Other";
+}
+
+// ----------------------
+// Handle file upload
 // ----------------------
 const handleUpload = async (req, res) => {
     console.log("🟢 handleUpload triggered");
 
     if (!req.file) {
-        console.log("❌ No file uploaded");
         return res.status(400).json({
             success: false,
             message: "No file uploaded."
@@ -34,14 +65,34 @@ const handleUpload = async (req, res) => {
     }
 
     try {
-        const fileBuffer = fs.readFileSync(req.file.path);
+        // 🔹 Step 1: Sanitise and extract fields
+        const project = sanitiseInput(req.body.project || "cms");
+        const instance = sanitiseInput(req.body.instance || "main");
+        const categoryRaw = sanitiseInput(req.body.category || "");
+        const uploadedByRaw = sanitiseInput(req.body.uploadedBy || "");
+        const category = categoryRaw && categoryRaw.trim() !== "" ? categoryRaw : "none";
+
+        // 🔹 Step 2: Determine uploader
+        const env = process.env.NODE_ENV || "development";
+        let uploader = "unknown";
+        if (env === "production" && req.user && req.user.username) {
+            uploader = req.user.username;
+        } else if (uploadedByRaw) {
+            uploader = uploadedByRaw;
+        } else if (process.env.UPLOAD_BY_DEV) {
+            uploader = process.env.UPLOAD_BY_DEV;
+        }
+
+        // 🔹 Step 3: Compute file hash (async)
+        const fileBuffer = await fs.promises.readFile(req.file.path);
         const fileHash = crypto.createHash("sha256").update(fileBuffer).digest("hex");
 
+        // 🔹 Step 4: Duplicate check
         const existing = await File.findOne({
             hash: fileHash
         });
         if (existing) {
-            fs.unlinkSync(req.file.path);
+            await fs.promises.unlink(req.file.path);
             console.log("⚠️ Duplicate detected for:", existing.originalName);
             return res.json({
                 success: false,
@@ -49,22 +100,58 @@ const handleUpload = async (req, res) => {
             });
         }
 
+        // 🔹 Step 5: Relative URL
+        const relativePath = path.relative("uploads", req.file.path).replace(/\\/g, "/");
+
+        // 🔹 Step 6: Additional metadata
+        const detectedType = getDetectedType(req.file.mimetype);
+        const encoding = req.file.encoding || "binary";
+
+        let dimensions = null;
+        //        console.log(`detectedType: ${detectedType}`);
+        if (detectedType === "Image") {
+            try {
+                const imageBuffer = await fs.promises.readFile(req.file.path);
+                const {
+                    width,
+                    height
+                } = imageSize(imageBuffer);
+
+                dimensions = `${width}×${height}`;
+                //                console.log(dimensions)
+            } catch (err) {
+                console.warn("⚠️ Could not determine image dimensions:", err.message);
+                dimensions = null;
+            }
+        } else {
+            dimensions = null;
+        }
+
+
+        // 🔹 Step 7: Save metadata
         const newFile = new File({
             originalName: req.file.originalname,
             filename: req.file.filename,
             mimetype: req.file.mimetype,
             size: req.file.size,
             path: req.file.path,
-            url: "/files/" + req.file.filename,
+            url: "/files/" + relativePath,
             hash: fileHash,
+            project,
+            instance,
+            category,
+            uploadedBy: uploader,
+            detectedType,
+            encoding,
+            dimensions,
         });
 
         await newFile.save();
-        console.log("✅ File metadata saved:", newFile.originalName);
+        console.log(`✅ File metadata saved: ${newFile.originalName} (${uploader})`);
 
         return res.json({
             success: true,
-            message: `File "${newFile.originalName}" uploaded successfully.`
+            message: `File "${newFile.originalName}" uploaded successfully by ${uploader}.`
         });
 
     } catch (err) {
@@ -76,82 +163,6 @@ const handleUpload = async (req, res) => {
     }
 };
 
-const handleUploadV1 = async (req, res) => {
-    //    console.log("🟢 handleUpload triggered");
-
-    if (!req.file) {
-        req.flash("error_msg", "No file uploaded.");
-        //        console.log("❌ No file uploaded");
-        return res.redirect("/upload");
-    }
-
-    try {
-        //        console.log("🟢 File received:", req.file.originalname);
-        //        console.log("📁 Stored at:", req.file.path);
-
-        // Read file buffer
-        let fileBuffer;
-        try {
-            fileBuffer = fs.readFileSync(req.file.path);
-        } catch (err) {
-            //            console.error("❌ Failed to read uploaded file:", err);
-            req.flash("error_msg", "Failed to read uploaded file.");
-            return res.redirect("/upload");
-        }
-
-        // Generate SHA-256 hash
-        const fileHash = crypto.createHash("sha256").update(fileBuffer).digest("hex");
-        //        console.log("🔑 Generated hash:", fileHash);
-
-        // Check for duplicates in DB
-        const existing = await File.findOne({
-            hash: fileHash
-        });
-        if (existing) {
-            //            console.log("⚠️ Duplicate detected for:", existing.originalName);
-
-            // Remove the uploaded duplicate file
-            try {
-                fs.unlinkSync(req.file.path);
-            } catch (err) {
-                console.warn("⚠️ Could not delete duplicate file:", err.message);
-            }
-
-            // Store flash message
-            req.flash(
-                "error_msg",
-                `Duplicate file detected. Already uploaded as "${existing.originalName}".`
-            );
-
-            //            console.log("🟡 Flash message stored, redirecting to /files");
-            return res.redirect("/files");
-        }
-
-        // Save metadata to DB
-        const newFile = new File({
-            originalName: req.file.originalname,
-            filename: req.file.filename,
-            mimetype: req.file.mimetype,
-            size: req.file.size,
-            path: req.file.path,
-            url: "/files/" + req.file.filename,
-            hash: fileHash,
-        });
-
-        const savedFile = await newFile.save();
-        //        console.log("✅ File metadata saved to DB:", savedFile.originalName);
-
-        req.flash("success_msg", `File "${savedFile.originalName}" uploaded successfully.`);
-        //        console.log("🟢 Flash success stored, redirecting to /files");
-        return res.redirect("/files");
-
-    } catch (err) {
-        //        console.error("❌ Unexpected error during upload:", err);
-        req.flash("error_msg", `Error uploading file: ${err.message}`);
-        return res.redirect("/upload");
-    }
-};
-
 // ----------------------
 // Delete a file
 // ----------------------
@@ -159,13 +170,13 @@ const handleDelete = async (req, res) => {
     const fileId = req.params.id;
     try {
         const file = await File.findById(fileId);
-        if (!file) {
-            return res.json({
-                error: "File not found or already deleted."
-            });
-        }
-        if (fs.existsSync(file.path)) fs.unlinkSync(file.path);
+        if (!file) return res.json({
+            error: "File not found or already deleted."
+        });
+
+        if (fs.existsSync(file.path)) await fs.promises.unlink(file.path);
         await File.findByIdAndDelete(fileId);
+
         return res.json({
             success: `File "${file.originalName}" deleted successfully.`
         });
@@ -177,97 +188,35 @@ const handleDelete = async (req, res) => {
     }
 };
 
-const handleDeleteV1 = async (req, res) => {
-    const fileId = req.params.id;
-
-    try {
-        const file = await File.findById(fileId);
-        if (!file) {
-            req.flash("error_msg", "File not found or already deleted.");
-            return res.redirect("/files");
-        }
-
-        // Remove physical file
-        if (fs.existsSync(file.path)) fs.unlinkSync(file.path);
-        //        console.log("🗑 Deleted file from uploads:", file.filename);
-
-        // Remove metadata from DB
-        await File.findByIdAndDelete(fileId);
-        //        console.log("🗑 Deleted file metadata from DB:", file.filename);
-
-        req.flash("success_msg", `File "${file.originalName}" deleted successfully.`);
-        return res.redirect("/files");
-
-    } catch (err) {
-        //        console.error("❌ Error deleting file:", err);
-        req.flash("error_msg", `Failed to delete file: ${err.message}`);
-        return res.redirect("/files");
-    }
-};
-
 // ----------------------
-// List all uploaded files
+// List files
 // ----------------------
 const handleList = async (req, res) => {
     try {
-        // --- Parse query params ---
         let {
-            page = 1,
-                limit = 5,
-                sort = "uploadedAt",
-                dir = "desc",
-                search = "",
-                type = ""
+            page = 1, limit = 5, sort = "uploadedAt", dir = "desc", search = "", type = ""
         } = req.query;
-
-
-        limit = String(limit);
 
         page = parseInt(page, 10);
         if (isNaN(page) || page < 1) page = 1;
-
-        // Handle "All" option
         const isAll = limit === "All" || limit === "all";
         const numericLimit = isAll ? 0 : parseInt(limit, 10);
 
-        // --- Build filter object (NEW) ---
+        // Filter
         const filter = {};
+        if (search?.trim()) filter.originalName = new RegExp(search.trim(), "i");
+        if (type && type !== "all") filter.mimetype = new RegExp(type.trim(), "i");
 
-        // Search by filename (original name)
-        if (search && search.trim() !== "") {
-            filter.originalName = new RegExp(search.trim(), "i");
-        }
-
-        // Filter by type (uses mimetype partial match, e.g. "image", "pdf", etc.)
-        if (type && type !== "all" && type.trim() !== "") {
-            filter.mimetype = new RegExp(type.trim(), "i");
-        }
-
-        // --- Count total filtered files ---
         const totalFiles = await File.countDocuments(filter);
-
-        // --- Compute total pages ---
         const totalPages = isAll ? 1 : Math.ceil(totalFiles / numericLimit);
 
-        // --- Build sort object ---
         const sortObj = {};
         sortObj[sort] = dir === "asc" ? 1 : -1;
 
-        // --- Query files ---
         let query = File.find(filter).sort(sortObj).lean();
-        if (!isAll) {
-            query = query.skip((page - 1) * numericLimit).limit(numericLimit);
-        }
-
+        if (!isAll) query = query.skip((page - 1) * numericLimit).limit(numericLimit);
         const files = await query;
 
-        // --- Flash messages ---
-        const successMsgs = req.flash("success_msg");
-        const errorMsgs = req.flash("error_msg");
-
-        // --- Per-page options ---
-        const perPageOptions = ["5", "10", "20", "All"];
-        // --- Render view ---
         res.render("filelist", {
             title: "Uploaded Files",
             layout: "main",
@@ -275,30 +224,69 @@ const handleList = async (req, res) => {
             currentPage: page,
             totalPages,
             limit,
-            perPageOptions,
+            perPageOptions: ["5", "10", "20", "All"],
             sort,
             dir,
-            query: req.query, // ensures filters persist in links/forms
-            success_msg: successMsgs,
-            error_msg: errorMsgs
+            query: req.query
         });
+
     } catch (err) {
         console.error("❌ Error loading files:", err);
         res.render("filelist", {
             title: "Uploaded Files",
             layout: "main",
             files: [],
-            error_msg: ["Could not load file list."],
+            error_msg: ["Could not load file list."]
         });
     }
 };
 
+const handleListJson = async (req, res) => {
+    try {
+        // Optional: enforce facilitator role
+        if (!req.user || !(req.user.role === 'superuser' || req.user.role === 'facilitator')) {
+            return res.status(403).json({
+                error: 'Access denied'
+            });
+        }
 
+        // Use the same filter logic you already have for listing
+        const filter = {};
+        // Optionally add project/instance filtering if req.query.project present
+        const {
+            project,
+            instance
+        } = req.query;
+        if (project) filter.project = project;
+        if (instance) filter.instance = instance;
 
+        const files = await File.find(filter)
+            .sort({
+                uploadedAt: -1
+            })
+            .lean()
+            .select('_id originalName filename mimetype size uploadedAt url project instance category uploadedBy');
 
+        return res.json({
+            files
+        });
+    } catch (err) {
+        console.error('❌ Error fetching files JSON:', err);
+        return res.status(500).json({
+            error: 'Server error'
+        });
+    }
+};
 
-
-
+const getAllFiles = async () => {
+    try {
+        const files = await File.find().sort({ uploadedAt: -1 }).lean();
+        return files;
+    } catch (err) {
+        console.error("❌ getAllFiles() failed:", err);
+        throw err;
+    }
+};
 
 
 module.exports = {
@@ -306,4 +294,6 @@ module.exports = {
     handleUpload,
     handleDelete,
     handleList,
+    handleListJson,
+    getAllFiles,
 };
