@@ -1,0 +1,18 @@
+
+#student-list {
+    list-style: none;
+    padding: 0;
+}
+#student-list li {
+    margin: 4px 0;
+    padding: 6px 8px;
+    background: #f8f8f8;
+    border-radius: 8px;
+    transition: opacity 0.5s ease;
+}
+#student-list li s {
+    color: #888;
+}
+#student-list li[idle] {
+  opacity: 0.5;
+}

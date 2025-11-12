@@ -6,44 +6,65 @@ export class StudentSocket {
         this.socket = null;
         this.reconnectAttempts = 0;
         this.maxReconnectAttempts = 10;
+        this.onSessionState = null; // callback for full session state
+        this.onReceiveAsset = null; // callback for new asset
+        this.onSessionReset = null; // callback for session reset
         this.connect();
     }
 
     connect() {
         this.socket = io({
-            reconnection: false // we'll handle it manually
+            reconnection: false // manual reconnection
         });
 
         this.socket.on("connect", () => {
             console.log("⚡ Connected to server:", this.socket.id);
             this.reconnectAttempts = 0;
             this.joinSession();
+            this.pingInterval = setInterval(() => {
+                if (this.socket && this.socket.connected) {
+                    this.socket.emit("studentPing", {
+                        sessionId: this.sessionId,
+                        username: this.username
+                    });
+                }
+            }, 30000);
+
         });
 
         this.socket.on("disconnect", (reason) => {
             console.warn("⚡ Disconnected:", reason);
+            clearInterval(this.pingInterval);
             this.tryReconnect();
+
         });
 
         this.socket.on("sessionState", (session) => {
             console.log("📄 Received full session state:", session);
-            document.dispatchEvent(new CustomEvent("sessionStateReceived", { detail: session }));
+            if (this.onSessionState) this.onSessionState(session);
         });
-        console.log('connect stuff');
+
         this.socket.on("receiveAsset", (asset) => {
-            console.log('rec', asset);
-            document.dispatchEvent(new CustomEvent("assetReceived", { detail: asset }));
+            console.log("📥 Asset received:", asset);
+            if (this.onReceiveAsset) this.onReceiveAsset(asset);
         });
 
         this.socket.on("errorMessage", (msg) => {
-            alert(msg);
+            console.warn("⚠️ Server error:", msg);
         });
+
         this.socket.on("sessionReset", () => {
             console.log("Session reset — returning to waiting state.");
-            if (onSessionReset) onSessionReset();
+            // Clear local session state
+            this.assets = [];
+            document.dispatchEvent(new CustomEvent("sessionStateReceived", {
+                detail: {
+                    assets: []
+                }
+            }));
+            alert("The session has been reset by the facilitator.");
         });
     }
-
 
     joinSession() {
         this.socket.emit("joinSession", {
@@ -55,16 +76,31 @@ export class StudentSocket {
 
     tryReconnect() {
         if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-            console.error("⚠️ Max reconnect attempts reached. Unable to reconnect.");
+            console.error("⚠️ Max reconnect attempts reached.");
             return;
         }
 
-        const delay = Math.min(5000, 500 * Math.pow(2, this.reconnectAttempts)); // exponential backoff
-        console.log(`🔄 Attempting reconnect in ${delay}ms...`);
+        const delay = Math.min(5000, 500 * Math.pow(2, this.reconnectAttempts));
+        console.log(`🔄 Reconnect attempt #${this.reconnectAttempts + 1} in ${delay}ms`);
         setTimeout(() => {
             this.reconnectAttempts++;
-            console.log(`🔄 Reconnect attempt #${this.reconnectAttempts}`);
             this.connect();
         }, delay);
+    }
+
+    sendMessage(event, data) {
+        if (this.socket) {
+            this.socket.emit(event, data);
+        }
+    }
+
+    setCallbacks({
+        onSessionState,
+        onReceiveAsset,
+        onSessionReset
+    }) {
+        this.onSessionState = onSessionState;
+        this.onReceiveAsset = onReceiveAsset;
+        this.onSessionReset = onSessionReset;
     }
 }

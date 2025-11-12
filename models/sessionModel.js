@@ -4,6 +4,7 @@ const mongoose = require("mongoose");
 const studentSchema = new mongoose.Schema({
     username: { type: String, required: true },
     socketId: { type: String, default: null },
+    connected: { type: Boolean, default: true }
 });
 
 const assetSchema = new mongoose.Schema({

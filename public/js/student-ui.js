@@ -2,16 +2,9 @@
 export class StudentUI {
     constructor(containerId) {
         this.container = document.getElementById(containerId);
-
-        document.addEventListener("sessionStateReceived", (e) => {
-            this.renderSession(e.detail);
-        });
-
-        document.addEventListener("assetReceived", (e) => {
-            this.renderAsset(e.detail);
-        });
     }
 
+    // Called by StudentSession callback
     renderSession(session) {
         this.container.innerHTML = ""; // clear previous content
         if (session.assets && session.assets.length > 0) {
@@ -19,6 +12,7 @@ export class StudentUI {
         }
     }
 
+    // Render a single asset
     renderAsset(asset) {
         const wrapper = document.createElement('div');
         wrapper.style.marginBottom = "20px";
@@ -59,17 +53,5 @@ export class StudentUI {
         }
 
         this.container.appendChild(wrapper);
-    }
-    showAsset(asset) {
-        console.log("Asset received (UI layer):", asset);
-
-        // TODO: Replace with real UI rendering
-        // Example minimal behavior:
-        const container = document.getElementById("asset-view");
-        if (container) {
-            const el = document.createElement("div");
-            el.textContent = "Received asset: " + JSON.stringify(asset);
-            container.appendChild(el);
-        }
     }
 }

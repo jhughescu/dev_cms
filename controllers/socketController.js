@@ -5,7 +5,10 @@ const {
 const Session = require("../models/sessionModel");
 
 let io;
-const socketSessions = {}; // in-memory { sessionId: [socketIds] }
+
+// In-memory tracking for live sockets
+// Structure: { [sessionId]: { facilitator: socketId|null, students: [socketId,...] } }
+const socketSessions = {};
 
 function initSocket(server) {
     io = new Server(server);
@@ -21,17 +24,21 @@ function initSocket(server) {
         }) => {
             if (!sessionId || !username) return;
 
-            // Create array for in-memory tracking if missing
-            if (!socketSessions[sessionId]) socketSessions[sessionId] = [];
-            socketSessions[sessionId].push(socket.id);
+            // Initialize in-memory tracking
+            if (!socketSessions[sessionId]) {
+                socketSessions[sessionId] = {
+                    facilitator: null,
+                    students: []
+                };
+            }
 
             let session = await Session.findOne({
                 sessionId
             });
 
+            // 🧱 Create session only if facilitator joins first
             if (!session) {
                 if (type === "facilitator") {
-                    // Create new session
                     session = new Session({
                         sessionId,
                         facilitator: username,
@@ -46,46 +53,56 @@ function initSocket(server) {
                 }
             }
 
-            // --- Handle student reconnects or new joins ---
-            if (type === "student") {
-                const existing = session.students.find((s) => s.username === username);
-                if (!existing) {
-                    session.students.push({
-                        username,
-                        socketId: socket.id
-                    });
-                    console.log(`New student ${username} joined session ${sessionId}`);
-                } else {
-                    existing.socketId = socket.id; // update for reconnect
-                    console.log(`Student ${username} reconnected to session ${sessionId}`);
+            // --- Facilitator joins ---
+            if (type === "facilitator") {
+                socketSessions[sessionId].facilitator = socket.id;
+                console.log(`Facilitator ${username} joined ${sessionId}`);
+
+                // Send current student list to facilitator
+                if (session.students.length > 0) {
+                    io.to(socket.id).emit("studentListUpdated", session.students);
                 }
+            }
+
+            // --- Student joins/reconnects ---
+            if (type === "student") {
+                let student = session.students.find((s) => s.username === username);
+
+                if (!student) {
+                    student = {
+                        username,
+                        socketId: socket.id,
+                        connected: true,
+                    };
+                    session.students.push(student);
+                    console.log(`New student ${username} joined ${sessionId}`);
+                } else {
+                    student.socketId = socket.id;
+                    student.connected = true;
+                    console.log(`Student ${username} reconnected to ${sessionId}`);
+                }
+
                 await session.save();
+
+                // Track student socket in memory
+                if (!socketSessions[sessionId].students.includes(socket.id)) {
+                    socketSessions[sessionId].students.push(socket.id);
+                }
+
+                // Notify facilitator if connected
+                if (socketSessions[sessionId].facilitator) {
+                    console.log(`emit studentListUpdated`);
+                    io.to(socketSessions[sessionId].facilitator).emit("studentListUpdated", session.students);
+                }
             }
 
             socket.join(sessionId);
-            console.log(`${username} joined session ${sessionId} as ${type}`);
 
-            // --- Send full session state to joining socket ---
+            // Send full session state to joining socket
             socket.emit("sessionState", session);
         });
 
-        socket.on("resetSession", async ({
-            sessionId
-        }) => {
-            if (!sessionId) return;
-
-            await Session.deleteOne({
-                sessionId
-            });
-
-            // Notify all connected clients
-            io.to(sessionId).emit("sessionReset");
-
-            // Optionally clear rooms (clients will auto-leave on reconnect)
-            console.log(`Session ${sessionId} has been reset.`);
-        });
-
-        // --- Facilitator sends asset to session ---
+        // --- Facilitator sends asset ---
         socket.on("sendAsset", async ({
             sessionId,
             asset,
@@ -96,7 +113,6 @@ function initSocket(server) {
             });
             if (!session) return;
 
-            // Only facilitator can send
             if (username !== session.facilitator) {
                 console.warn(`Unauthorized asset send attempt by ${username}`);
                 return;
@@ -107,22 +123,69 @@ function initSocket(server) {
             await session.save();
 
             io.to(sessionId).emit("receiveAsset", asset);
-            console.log(`Asset sent to session ${sessionId} by ${username}: ${asset.originalName}`);
+            console.log(`Asset sent to ${sessionId} by ${username}: ${asset.originalName}`);
+        });
+
+        // --- Reset session ---
+        socket.on("resetSession", async ({
+            sessionId
+        }) => {
+            if (!sessionId) return;
+            await Session.deleteOne({
+                sessionId
+            });
+
+            // Notify all connected clients
+            io.to(sessionId).emit("sessionReset");
+            console.log(`Session ${sessionId} reset.`);
+
+            // Cleanup in-memory sockets
+            delete socketSessions[sessionId];
         });
 
         // --- Disconnect handling ---
-        socket.on("disconnect", () => {
+        // --- Disconnect handling ---
+        socket.on("disconnect", async () => {
             console.log("Socket disconnected:", socket.id);
-            for (const sessionId in socketSessions) {
-                socketSessions[sessionId] = socketSessions[sessionId].filter(
-                    (id) => id !== socket.id
-                );
+
+            // Check if student
+            let session = await Session.findOne({
+                "students.socketId": socket.id
+            });
+            if (session) {
+                const student = session.students.find((s) => s.socketId === socket.id);
+                if (student) {
+                    student.connected = false;
+                    await session.save();
+
+                    // Notify facilitator if connected
+                    const facilitatorSocket =
+                        socketSessions[session.sessionId] && socketSessions[session.sessionId].facilitator;
+                    if (facilitatorSocket) {
+                        console.log(`emit studentListUpdated`);
+                        io.to(facilitatorSocket).emit("studentListUpdated", session.students);
+                    }
+
+                    console.log(`Student ${student.username} disconnected from ${session.sessionId}`);
+                }
+            }
+
+            // Remove student socket from in-memory tracking
+            for (const sId in socketSessions) {
+                const idx = socketSessions[sId].students.indexOf(socket.id);
+                if (idx !== -1) socketSessions[sId].students.splice(idx, 1);
+
+                // Remove facilitator socket if it disconnected
+                if (socketSessions[sId].facilitator === socket.id) {
+                    socketSessions[sId].facilitator = null;
+                }
             }
         });
+
     });
 }
 
 module.exports = {
     initSocket,
-    socketSessions,
+    socketSessions
 };

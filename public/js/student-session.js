@@ -1,52 +1,33 @@
-// student-session.js
+// public/js/student-session.js
 export class StudentSession {
     constructor(sessionId, username) {
         this.sessionId = sessionId;
         this.username = username;
 
-        // ✅ Socket reference
-        this.socket = null;
-
-        // ✅ Session state stored locally
+        // Session state stored locally
         this.text = "";
         this.template = null;
         this.assets = [];
     }
 
-    // ✅ Called by student-main.js to begin socket connection
-    connect(onSessionState, onReceiveAsset) {
-        this.socket = initStudentSocket(
-            this.sessionId,
-            this.username,
-            (sessionState) => {
-                this.updateSession(sessionState);      // ✅ update internal state
-                onSessionState(sessionState);          // ✅ notify UI layer
-            },
-            (asset) => {
-                this.addAsset(asset);                  // ✅ track assets internally
-                onReceiveAsset(asset);                 // ✅ notify UI layer
-            },
-            this.onSessionReset
-        );
-    }
-
-    // ✅ Required: student-main.js and socket must call this
+    // Update the internal session state from server data
     updateSession(sessionState) {
         this.text = sessionState.text || "";
         this.template = sessionState.template || null;
         this.assets = sessionState.assets || [];
-        console.log(sessionState)
+        console.log("Session state updated:", sessionState);
     }
 
-    // ✅ Helper when the server sends a single asset
+    // Add a single asset to the local session state
     addAsset(asset) {
         this.assets.push(asset);
+        console.log("Asset added to local session:", asset);
     }
 
-    // ✅ Generic socket emitter
-    sendMessage(event, data) {
-        if (this.socket) {
-            this.socket.emit(event, data);
+    // Generic helper to emit messages to the server (requires socket reference externally)
+    sendMessage(socket, event, data) {
+        if (socket && socket.connected) {
+            socket.emit(event, data);
         }
     }
 }
