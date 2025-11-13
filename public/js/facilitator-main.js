@@ -1,52 +1,61 @@
 // public/js/facilitator-main.js
-import { FacilitatorUI } from "./facilitator-ui.js";
+import {
+    FacilitatorUI
+} from "./facilitator-ui.js";
 
 document.addEventListener("DOMContentLoaded", () => {
+    // Initialize core objects
     const ui = new FacilitatorUI();
     const socket = io();
+
     const sessionId = "classroom1";
-    const username = "JohnDoe"; // or dynamic facilitator name
+    const username = "JohnDoe"; // Replace with dynamic facilitator username if needed
 
-    socket.emit("joinSession", { sessionId, type: "facilitator", username });
-
-    // ✅ When facilitator sends asset
-    window.sendAsset = (asset) => {
-        const payload = {
-            sessionId,
-            asset,
-            username,
-        };
-        console.log("Sending asset:", payload);
-        socket.emit("sendAsset", payload);
-        ui.showStatus(`Asset "${asset.originalName}" sent to students.`);
-    };
-
-    // ✅ Reset session
-    document.getElementById("reset-session-btn").addEventListener("click", () => {
-        if (confirm("Reset session and disconnect students?")) {
-            socket.emit("resetSession", { sessionId });
-        }
+    // ✅ Join the session as facilitator
+    socket.emit("joinSession", {
+        sessionId,
+        type: "facilitator",
+        username
     });
 
-    // ✅ Show student list updates
+    // ✅ Hook up UI buttons (Send + Reset)
+    ui.attachFileHandlers({
+        sendAsset: (asset) => socket.emit("sendAsset", {
+            sessionId,
+            asset,
+            username
+        }),
+        resetSession: () => socket.emit("resetSession", {
+            sessionId
+        })
+    });
+
+    // ✅ Student list updates
     socket.on("studentListUpdated", (students) => {
         console.log("📋 Student list updated:", students);
         ui.renderStudents(students);
     });
 
-    // ✅ Session reset
-    socket.on("sessionReset", () => {
-        ui.showStatus("Session has been reset.");
-        ui.renderStudents([]);
-    });
-
-    // ✅ Session state (for reloads)
+    // ✅ Full session state (for page reloads)
     socket.on("sessionState", (session) => {
         console.log("📦 Full session state received:", session);
         ui.renderStudents(session.students);
     });
 
-    // ✅ Error messages
+    // ✅ Session reset
+    socket.on("sessionReset", () => {
+        console.log("🧹 Session has been reset.");
+        ui.showStatus("Session has been reset.");
+        ui.renderStudents([]);
+    });
+
+    // ✅ Student activity pings
+    socket.on("studentActive", (data) => {
+        console.log("💡 Student active:", data);
+        ui.markActive(data);
+    });
+
+    // ✅ Error handling
     socket.on("errorMessage", (msg) => {
         alert("Error: " + msg);
     });

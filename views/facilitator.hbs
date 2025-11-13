@@ -1,20 +1,17 @@
 <h1>{{title}}</h1>
 
 <p>Select an asset to send to all students:</p>
+
 <div id="file-list">
     {{#if files.length}}
         <ul>
             {{#each files}}
-                <div class="file-item">
-                    <span>{{this.originalName}}</span>
-                    <button data-asset='{
-                        "url": "{{this.url}}",
-                        "mimetype": "{{this.mimetype}}",
-                        "originalName": "{{this.originalName}}",
-                        "size": "{{this.size}}",
-                        "uploadedBy": "{{this.uploadedBy}}"
-                    }'>Send to Students</button>
-                </div>
+                <li class="file-item" data-url="{{this.url}}" data-mimetype="{{this.mimetype}}" data-original-name="{{this.originalName}}" data-size="{{this.size}}" data-uploaded-by="{{this.uploadedBy}}">
+                    <span class="file-name">{{this.originalName}}</span>
+                    <button class="send-asset-btn" data-url="{{this.url}}" data-mimetype="{{this.mimetype}}" data-original-name="{{this.originalName}}" data-size="{{this.size}}" data-uploaded-by="{{this.uploadedBy}}">
+                        Send to Students
+                    </button>
+                </li>
             {{/each}}
         </ul>
     {{else}}
@@ -25,7 +22,12 @@
 <hr />
 
 <h3>👩‍🏫 Connected Students</h3>
-<ul id="student-list">Loading...</ul>
+
+<div id="student-list-container">
+    <ul id="student-list">
+        <li>Waiting for connections...</li>
+    </ul>
+</div>
 
 <hr />
 

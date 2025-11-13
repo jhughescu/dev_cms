@@ -1,17 +1,23 @@
 export class FacilitatorUI {
     constructor(socketInstance) {
-        this.socket = socketInstance;
+        this.socket = socketInstance || null;
+
+        // Match template elements
+        this.studentListContainer = document.getElementById("student-list-container");
         this.studentList = document.getElementById("student-list");
         this.statusDiv = document.getElementById("status");
-        this.students = new Map(); // username → { joinedAt, element }
+
+        // Track students by username → { joinedAt, element, idleTimer }
+        this.students = new Map();
         this.durationInterval = null;
 
+        // Bind custom DOM events
         document.addEventListener("studentJoined", (e) => this.addStudent(e.detail));
         document.addEventListener("studentLeft", (e) => this.removeStudent(e.detail.username));
         document.addEventListener("sessionReset", () => this.resetList());
         document.addEventListener("studentActive", (e) => this.markActive(e.detail));
 
-
+        // Start periodic updates
         this.startDurationUpdates();
     }
 
@@ -52,7 +58,7 @@ export class FacilitatorUI {
 
 
     /** Render the list of students with their connection status */
-    renderStudents(students) {
+    renderStudentsV1(students) {
         console.log("renderStudents", this.studentList);
         if (!this.studentList) return;
         this.studentList.innerHTML = "";
@@ -71,6 +77,34 @@ export class FacilitatorUI {
 
         this.studentList.appendChild(list);
     }
+    renderStudents(students) {
+        if (!this.studentListContainer) return;
+
+        const list = document.getElementById("student-list");
+        list.innerHTML = "";
+
+        if (!students || students.length === 0) {
+            list.innerHTML = "<li>No students connected.</li>";
+            return;
+        }
+
+        students.forEach(student => {
+            const li = document.createElement("li");
+            li.classList.add(student.connected ? "online" : "offline");
+
+            const joined = student.joinedAt ? new Date(student.joinedAt).toLocaleTimeString() : "—";
+            const lastActive = student.lastActive ? new Date(student.lastActive).toLocaleTimeString() : "—";
+
+            li.innerHTML = `
+          <strong>${student.username}</strong> — ${student.connected ? "🟢 Online" : "🔴 Offline"}<br>
+          Joined: ${joined}<br>
+          <span class="duration">0m</span> ago<br>
+          <small class="last-active">Last active: ${lastActive}</small>
+        `;
+            list.appendChild(li);
+        });
+    }
+
 
 
     /** Show a brief status message (e.g., session reset, asset sent) */
@@ -125,23 +159,86 @@ export class FacilitatorUI {
         }, 90000);
     }
 
+    // Inside class FacilitatorUI
+    attachFileHandlersV1({
+        sendAsset,
+        resetSession
+    }) {
+        // Attach handlers for “Send to Students” buttons
+        const attachAssetButtons = () => {
+            const buttons = document.querySelectorAll(".send-asset-btn");
+            buttons.forEach((btn) => {
+                // Avoid double-listening
+                btn.removeEventListener("click", btn._listener);
+
+                const handler = async () => {
+                    const fileId = btn.dataset.fileId;
+                    const fileName = btn.dataset.fileName;
+                    if (!fileId || !fileName) return alert("Missing file info.");
+
+                    const asset = {
+                        originalName: fileName,
+                        fileId,
+                        timestamp: new Date(),
+                    };
+
+                    sendAsset(asset);
+                };
+
+                // Store reference to avoid duplicates
+                btn._listener = handler;
+                btn.addEventListener("click", handler);
+            });
+        };
+
+        // Attach handler for reset session button
+        const resetBtn = document.getElementById("reset-session-btn");
+        if (resetBtn) {
+            resetBtn.removeEventListener("click", resetBtn._listener);
+            const resetHandler = () => {
+                resetSession();
+            };
+            resetBtn._listener = resetHandler;
+            resetBtn.addEventListener("click", resetHandler);
+        }
+
+        // Initial binding
+        attachAssetButtons();
+
+        // 🔄 Automatically rebind buttons if the file list changes
+        // (e.g., after new uploads or DOM updates)
+        const fileListContainer = document.getElementById("file-list");
+        if (fileListContainer) {
+            const observer = new MutationObserver(() => attachAssetButtons());
+            observer.observe(fileListContainer, {
+                childList: true,
+                subtree: true
+            });
+        }
+    }
     attachFileHandlers(socketLayer) {
-        // Handle “Send to Students” buttons
-        document.querySelectorAll(".file-item button").forEach(button => {
+        if (!socketLayer) {
+            console.warn("⚠️ attachFileHandlers called without socketLayer");
+            return;
+        }
+
+        // Handle "Send to Students" buttons
+        document.querySelectorAll(".file-item button").forEach((button) => {
             button.addEventListener("click", () => {
                 const asset = {
                     url: button.dataset.url,
                     mimetype: button.dataset.mimetype,
-                    originalName: button.dataset.originalName,
+                    originalName: button.dataset.originalName || button.dataset.originalName || "Unnamed",
                     size: button.dataset.size,
                     uploadedBy: button.dataset.uploadedBy
                 };
-                console.log("Facilitator sending asset:", asset);
+
+                console.log("📤 Facilitator sending asset:", asset);
                 socketLayer.sendAsset(asset);
             });
         });
 
-        // Handle reset session button if present
+        // Handle "Reset Session" button
         const resetBtn = document.getElementById("reset-session-btn");
         if (resetBtn) {
             resetBtn.addEventListener("click", () => {
@@ -151,5 +248,7 @@ export class FacilitatorUI {
             });
         }
     }
+
+
 
 }
