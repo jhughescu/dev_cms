@@ -1,25 +1,47 @@
 <h1>{{title}}</h1>
 
-<p>Select an asset to send to all students:</p>
+<p>Select one or more assets to send to students:</p>
 
-<div id="file-list">
-    {{#if files.length}}
-        <ul>
-            {{#each files}}
-                <li class="file-item" data-url="{{this.url}}" data-mimetype="{{this.mimetype}}" data-original-name="{{this.originalName}}" data-size="{{this.size}}" data-uploaded-by="{{this.uploadedBy}}">
-                    <span class="file-name">{{this.originalName}}</span>
-                    <button class="send-asset-btn" data-url="{{this.url}}" data-mimetype="{{this.mimetype}}" data-original-name="{{this.originalName}}" data-size="{{this.size}}" data-uploaded-by="{{this.uploadedBy}}">
-                        Send to Students
-                    </button>
-                </li>
-            {{/each}}
-        </ul>
-    {{else}}
-        <p>No files available.</p>
-    {{/if}}
+<!-- 🔍 Filter + Search Controls -->
+<div id="file-filters" class="filters">
+    <input type="text" id="search-input" placeholder="Search files..." />
+
+    <select id="filter-category">
+        <option value="">All Categories</option>
+    </select>
+
+    <select id="filter-type">
+        <option value="">All Types</option>
+    </select>
+
+    <select id="filter-uploader">
+        <option value="">All Uploaders</option>
+    </select>
 </div>
 
-<hr />
+<!-- 📁 File Table -->
+<table id="file-table" class="file-table">
+    <thead>
+        <tr>
+            <th>Select</th>
+            <th>Name</th>
+            <th>Mimetype</th>
+            <th>Size</th>
+            <th>Category</th>
+            <th>Uploaded By</th>
+            <th>Uploaded At</th>
+        </tr>
+    </thead>
+    <tbody id="file-table-body">
+        <tr>
+            <td colspan="7" style="text-align:center;">Loading files...</td>
+        </tr>
+    </tbody>
+</table>
+
+<button id="send-selected-btn">Send Selected Files</button>
+
+<hr/>
 
 <h3>👩‍🏫 Connected Students</h3>
 
@@ -29,13 +51,18 @@
     </ul>
 </div>
 
-<hr />
+<hr/>
 
 <p><strong>Session ID:</strong> classroom1</p>
 <button id="reset-session-btn">Reset Session</button>
 <div id="status"></div>
 
 <script src="/socket.io/socket.io.js"></script>
+
+<!-- The new client-side browser logic -->
+<script type="module" src="/js/facilitator-filebrowser.js"></script>
+
 <script type="module" src="/js/facilitator-main.js"></script>
 
 <link rel="stylesheet" href="/css/facilitator.css" />
+<!--<link rel="stylesheet" href="/css/facilitator-filebrowser.css" />-->

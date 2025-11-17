@@ -138,5 +138,16 @@ module.exports = {
         if (typeof str !== 'string') return '';
         //        console.log(str, str.toLowerCase(str));
         return str.toLowerCase();
-    }
+    },
+
+    formattedSize: (size) => {
+        if (size < 1024) return size + ' B';
+        if (size < 1024 * 1024) return (size / 1024).toFixed(1) + ' KB';
+        return (size / (1024*1024)).toFixed(1) + ' MB';
+    },
+
+    formattedDate: (date) => {
+        return new Date(date).toLocaleString();
+    },
+    isImage: mimetype => mimetype.startsWith('image/')
 };

@@ -2,6 +2,7 @@
 const express = require("express");
 const router = express.Router();
 const path = require("path");
+
 const {
     upload,
     handleUpload,
@@ -11,13 +12,15 @@ const {
     getAllFiles
 } = require("./fileSystemController");
 
+const facilitatorController = require("./facilitatorController");
+
 // ----------------------
-// Static routes
+// Static File Serving
 // ----------------------
 router.use("/files", express.static(path.join(__dirname, "../uploads")));
 
 // ----------------------
-// Upload form
+// Upload Form
 // ----------------------
 router.get("/upload", (req, res) => {
     const devUploader = process.env.UPLOAD_BY_DEV || "";
@@ -30,29 +33,39 @@ router.get("/upload", (req, res) => {
 });
 
 // ----------------------
-// Upload handler
+// Upload Handler
 // ----------------------
 router.post("/upload", upload.single("file"), handleUpload);
 
 // ----------------------
-// List uploaded files
+// List Uploaded Files Page
 // ----------------------
 router.get("/files", handleList);
 
 // ----------------------
-// Delete file
+// Delete File
 // ----------------------
 router.post("/files/delete/:id", handleDelete);
 
+// ----------------------
+// Public API (already existed)
+// ----------------------
+router.get("/api/facilitator/files", handleListJson);
 
-router.get('/api/facilitator/files', handleListJson);
+// ----------------------
+// Facilitator JSON File Browser (NEW / FIXED)
+// ----------------------
+router.get(
+    "/facilitator/:project/:instance/files/json",
+    facilitatorController.getFileBrowserJson
+);
 
+// ----------------------
+// Facilitator Dashboard Page
+// ----------------------
 router.get("/facilitator", async (req, res) => {
     try {
-//        const files = await File.find().sort({ uploadedAt: -1 }).lean();
         const files = await getAllFiles();
-        console.log('files');
-        console.log(files);
         res.render("facilitator", {
             title: "Facilitator Dashboard",
             layout: "main",
@@ -69,6 +82,9 @@ router.get("/facilitator", async (req, res) => {
     }
 });
 
+// ----------------------
+// Student View
+// ----------------------
 router.get("/student", (req, res) => {
     res.render("student", {
         title: "Student View",
@@ -76,9 +92,8 @@ router.get("/student", (req, res) => {
     });
 });
 
-
 // ----------------------
-// Home redirect
+// Default Redirect
 // ----------------------
 router.get("/", (req, res) => res.redirect("/upload"));
 

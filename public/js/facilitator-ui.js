@@ -6,6 +6,7 @@ export class FacilitatorUI {
         this.studentListContainer = document.getElementById("student-list-container");
         this.studentList = document.getElementById("student-list");
         this.statusDiv = document.getElementById("status");
+        this.fileListContainer = document.getElementById("file-list-container");
 
         // Track students by username → { joinedAt, element, idleTimer }
         this.students = new Map();
@@ -29,12 +30,11 @@ export class FacilitatorUI {
 
         const li = document.createElement("li");
         const joinTime = new Date(joinedAt);
-        //        li.innerHTML = `<strong>${username}</strong> — joined at ${joinTime.toLocaleTimeString()} (<span class="duration">0m</span> ago)`;
         li.innerHTML = `
-  <strong>${username}</strong> — joined at ${joinTime.toLocaleTimeString()}
-  (<span class="duration">0m</span> ago)
-  <br><small class="last-active">Last active: ${joinTime.toLocaleTimeString()}</small>
-`;
+            <strong>${username}</strong> — joined at ${joinTime.toLocaleTimeString()}
+            (<span class="duration">0m</span> ago)
+            <br><small class="last-active">Last active: ${joinTime.toLocaleTimeString()}</small>
+        `;
 
         li.dataset.username = username;
 
@@ -56,27 +56,7 @@ export class FacilitatorUI {
         }
     }
 
-
     /** Render the list of students with their connection status */
-    renderStudentsV1(students) {
-        console.log("renderStudents", this.studentList);
-        if (!this.studentList) return;
-        this.studentList.innerHTML = "";
-
-        if (!students || students.length === 0) {
-            this.studentList.textContent = "No students connected.";
-            return;
-        }
-
-        const list = document.createElement("ul");
-        students.forEach(student => {
-            const li = document.createElement("li");
-            li.textContent = `${student.username} — ${student.connected ? "🟢 Online" : "🔴 Offline"}`;
-            list.appendChild(li);
-        });
-
-        this.studentList.appendChild(list);
-    }
     renderStudents(students) {
         if (!this.studentListContainer) return;
 
@@ -96,16 +76,14 @@ export class FacilitatorUI {
             const lastActive = student.lastActive ? new Date(student.lastActive).toLocaleTimeString() : "—";
 
             li.innerHTML = `
-          <strong>${student.username}</strong> — ${student.connected ? "🟢 Online" : "🔴 Offline"}<br>
-          Joined: ${joined}<br>
-          <span class="duration">0m</span> ago<br>
-          <small class="last-active">Last active: ${lastActive}</small>
-        `;
+                <strong>${student.username}</strong> — ${student.connected ? "🟢 Online" : "🔴 Offline"}<br>
+                Joined: ${joined}<br>
+                <span class="duration">0m</span> ago<br>
+                <small class="last-active">Last active: ${lastActive}</small>
+            `;
             list.appendChild(li);
         });
     }
-
-
 
     /** Show a brief status message (e.g., session reset, asset sent) */
     showStatus(message) {
@@ -135,6 +113,7 @@ export class FacilitatorUI {
             if (durEl) durEl.textContent = `${mins}m`;
         }
     }
+
     markActive({
         username,
         lastActive
@@ -151,84 +130,25 @@ export class FacilitatorUI {
             activeEl.textContent = `Last active: ${time}`;
         }
 
-        // Optional: visually highlight recently active students
         element.style.opacity = 1.0;
         clearTimeout(data.idleTimer);
         data.idleTimer = setTimeout(() => {
-            element.style.opacity = 0.5; // fade if idle for >1.5 minutes
+            element.style.opacity = 0.5;
         }, 90000);
     }
 
-    // Inside class FacilitatorUI
-    attachFileHandlersV1({
-        sendAsset,
-        resetSession
-    }) {
-        // Attach handlers for “Send to Students” buttons
-        const attachAssetButtons = () => {
-            const buttons = document.querySelectorAll(".send-asset-btn");
-            buttons.forEach((btn) => {
-                // Avoid double-listening
-                btn.removeEventListener("click", btn._listener);
-
-                const handler = async () => {
-                    const fileId = btn.dataset.fileId;
-                    const fileName = btn.dataset.fileName;
-                    if (!fileId || !fileName) return alert("Missing file info.");
-
-                    const asset = {
-                        originalName: fileName,
-                        fileId,
-                        timestamp: new Date(),
-                    };
-
-                    sendAsset(asset);
-                };
-
-                // Store reference to avoid duplicates
-                btn._listener = handler;
-                btn.addEventListener("click", handler);
-            });
-        };
-
-        // Attach handler for reset session button
-        const resetBtn = document.getElementById("reset-session-btn");
-        if (resetBtn) {
-            resetBtn.removeEventListener("click", resetBtn._listener);
-            const resetHandler = () => {
-                resetSession();
-            };
-            resetBtn._listener = resetHandler;
-            resetBtn.addEventListener("click", resetHandler);
-        }
-
-        // Initial binding
-        attachAssetButtons();
-
-        // 🔄 Automatically rebind buttons if the file list changes
-        // (e.g., after new uploads or DOM updates)
-        const fileListContainer = document.getElementById("file-list");
-        if (fileListContainer) {
-            const observer = new MutationObserver(() => attachAssetButtons());
-            observer.observe(fileListContainer, {
-                childList: true,
-                subtree: true
-            });
-        }
-    }
     attachFileHandlers(socketLayer) {
         if (!socketLayer) {
             console.warn("⚠️ attachFileHandlers called without socketLayer");
             return;
         }
 
-        // Handle "Send to Students" buttons
         document.querySelectorAll(".file-item button").forEach((button) => {
             button.addEventListener("click", () => {
                 const asset = {
                     url: button.dataset.url,
                     mimetype: button.dataset.mimetype,
-                    originalName: button.dataset.originalName || button.dataset.originalName || "Unnamed",
+                    originalName: button.dataset.originalName || "Unnamed",
                     size: button.dataset.size,
                     uploadedBy: button.dataset.uploadedBy
                 };
@@ -238,7 +158,6 @@ export class FacilitatorUI {
             });
         });
 
-        // Handle "Reset Session" button
         const resetBtn = document.getElementById("reset-session-btn");
         if (resetBtn) {
             resetBtn.addEventListener("click", () => {
@@ -249,6 +168,138 @@ export class FacilitatorUI {
         }
     }
 
+    /** Load file list via JSON + render using Handlebars template */
+    async renderFiles(project, instance) {
+        if (!this.fileListContainer) return;
 
+        try {
+            const res = await fetch(`/facilitator/${project}/${instance}/files/json`);
+            const data = await res.json();
 
+            if (!data.files || data.files.length === 0) {
+                this.fileListContainer.innerHTML = "<p>No files uploaded yet.</p>";
+                return;
+            }
+
+            const types = [...new Set(data.files.map(f => f.group || f.detectedType))].sort();
+            const categories = [...new Set(data.files.map(f => f.category || "none"))].sort();
+            const uploaders = [...new Set(data.files.map(f => f.uploadedBy || "unknown"))].sort();
+
+            const html = Handlebars.templates['facilitator-files']({
+                files: data.files,
+                types,
+                categories,
+                uploaders
+            });
+
+            this.fileListContainer.innerHTML = html;
+
+            this.attachFileHandlers(this.socket);
+            this.attachFiltersAndSorting();
+        } catch (err) {
+            console.error("Failed to load files:", err);
+            this.fileListContainer.innerHTML = "<p>Error loading files.</p>";
+        }
+    }
+
+    /** FULL FILTER + SORT IMPLEMENTATION */
+    attachFiltersAndSorting() {
+        const container = this.fileListContainer;
+        const tbody = container.querySelector("tbody");
+        const controls = container.querySelector(".file-filters");
+
+        const filterInputs = controls.querySelectorAll("input, select");
+
+        const renderFiltered = () => {
+            const searchVal = controls.querySelector("#file-search").value.toLowerCase();
+            const typeVal = controls.querySelector("#filter-type").value;
+            const categoryVal = controls.querySelector("#filter-category").value;
+            const uploaderVal = controls.querySelector("#filter-uploader").value;
+            const sortBy = controls.querySelector("#sort-by").value;
+            const sortDir = controls.querySelector("#sort-dir").value;
+
+            const rows = Array.from(tbody.querySelectorAll("tr"));
+
+            // Filter
+            rows.forEach(tr => {
+                const name = tr.dataset.originalname.toLowerCase();
+                const type = tr.querySelector("td:nth-child(4)").textContent;
+                const category = tr.querySelector("td:nth-child(5)").textContent;
+                const uploader = tr.querySelector("td:nth-child(8)").textContent;
+
+                const show =
+                    (!searchVal || name.includes(searchVal)) &&
+                    (!typeVal || type === typeVal) &&
+                    (!categoryVal || category === categoryVal) &&
+                    (!uploaderVal || uploader === uploaderVal);
+
+                tr.style.display = show ? "" : "none";
+            });
+
+            // Sort visible rows only
+            const sorted = rows
+                .filter(tr => tr.style.display !== "none")
+                .sort((a, b) => {
+                    let v1 = a.querySelector(`td:nth-child(${this.getSortColumn(sortBy)})`).textContent;
+                    let v2 = b.querySelector(`td:nth-child(${this.getSortColumn(sortBy)})`).textContent;
+
+                    if (sortBy === "uploadedAt") {
+                        v1 = new Date(a.dataset.uploadedAt);
+                        v2 = new Date(b.dataset.uploadedAt);
+                    }
+
+                    if (v1 < v2) return sortDir === "asc" ? -1 : 1;
+                    if (v1 > v2) return sortDir === "asc" ? 1 : -1;
+                    return 0;
+                });
+
+            sorted.forEach(tr => tbody.appendChild(tr));
+        };
+
+        // Bind all filter inputs
+        filterInputs.forEach(inp => inp.addEventListener("input", renderFiltered));
+
+        // Select-all checkbox
+        const selectAll = controls.querySelector("#select-all");
+        selectAll.addEventListener("change", () => {
+            tbody.querySelectorAll(".select-file").forEach(cb => (cb.checked = selectAll.checked));
+        });
+
+        // Send selected files
+        const sendBtn = controls.querySelector("#send-selected");
+        sendBtn.addEventListener("click", () => {
+            const selectedRows = Array.from(tbody.querySelectorAll(".select-file:checked"));
+            if (selectedRows.length === 0) return alert("No files selected.");
+
+            const assets = selectedRows.map(cb => {
+                const row = cb.closest("tr");
+                return {
+                    url: row.dataset.url,
+                    mimetype: row.dataset.mimetype,
+                    originalName: row.dataset.originalName,
+                    size: row.dataset.size,
+                    uploadedBy: row.dataset.uploadedBy
+                };
+            });
+
+            if (this.socket && this.socket.sendAsset) {
+                assets.forEach(a => this.socket.sendAsset(a));
+                this.showStatus(`${assets.length} file(s) sent to students.`);
+            }
+        });
+    }
+
+    /** Map sort keys → table column index */
+    getSortColumn(sortBy) {
+        switch (sortBy) {
+            case "name":
+                return 3;
+            case "size":
+                return 6;
+            case "uploadedAt":
+                return 7;
+            default:
+                return 3;
+        }
+    }
 }

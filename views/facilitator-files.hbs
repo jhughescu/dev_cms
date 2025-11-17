@@ -1,0 +1,66 @@
+<div class="file-filters">
+    <input type="text" id="file-search" placeholder="Search files..." />
+    <select id="filter-type">
+        <option value="">All Types</option>
+        {{#each types}}
+            <option value="{{this}}">{{this}}</option>
+        {{/each}}
+    </select>
+    <select id="filter-category">
+        <option value="">All Categories</option>
+        {{#each categories}}
+            <option value="{{this}}">{{this}}</option>
+        {{/each}}
+    </select>
+    <select id="filter-uploader">
+        <option value="">All Uploaders</option>
+        {{#each uploaders}}
+            <option value="{{this}}">{{this}}</option>
+        {{/each}}
+    </select>
+    <select id="sort-by">
+        <option value="name">Name</option>
+        <option value="size">Size</option>
+        <option value="uploadedAt">Uploaded At</option>
+    </select>
+    <select id="sort-dir">
+        <option value="asc">Asc</option>
+        <option value="desc" selected>Desc</option>
+    </select>
+    <button id="send-selected">Send Selected</button>
+</div>
+
+<table class="file-table">
+    <thead>
+        <tr>
+            <th><input type="checkbox" id="select-all"></th>
+            <th>Icon</th>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Category</th>
+            <th>Size</th>
+            <th>Uploaded</th>
+            <th>Uploaded By</th>
+        </tr>
+    </thead>
+    <tbody>
+        {{#each files}}
+            <tr data-url="{{url}}" data-mimetype="{{mimetype}}" data-originalName="{{name}}" data-size="{{size}}" data-uploadedBy="{{uploadedBy}}">
+                <td><input type="checkbox" class="select-file"></td>
+                <td>
+                    {{#if isImage}}
+                        <img src="{{url}}" alt="" width="24" height="24">
+                    {{else}}
+                        <span class="file-icon">{{icon}}</span>
+                    {{/if}}
+                </td>
+                <td>{{name}}</td>
+                <td>{{group}}</td>
+                <td>{{category}}</td>
+                <td>{{formattedSize size}}</td>
+                <td>{{formattedDate uploadedAt}}</td>
+                <td>{{uploadedBy}}</td>
+            </tr>
+        {{/each}}
+    </tbody>
+</table>

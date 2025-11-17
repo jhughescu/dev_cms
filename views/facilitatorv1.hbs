@@ -1,0 +1,41 @@
+<h1>{{title}}</h1>
+
+<p>Select an asset to send to all students:</p>
+
+<div id="file-list">
+    {{#if files.length}}
+        <ul>
+            {{#each files}}
+                <li class="file-item" data-url="{{this.url}}" data-mimetype="{{this.mimetype}}" data-original-name="{{this.originalName}}" data-size="{{this.size}}" data-uploaded-by="{{this.uploadedBy}}">
+                    <span class="file-name">{{this.originalName}}</span>
+                    <button class="send-asset-btn" data-url="{{this.url}}" data-mimetype="{{this.mimetype}}" data-original-name="{{this.originalName}}" data-size="{{this.size}}" data-uploaded-by="{{this.uploadedBy}}">
+                        Send to Students
+                    </button>
+                </li>
+            {{/each}}
+        </ul>
+    {{else}}
+        <p>No files available.</p>
+    {{/if}}
+</div>
+
+<hr />
+
+<h3>👩‍🏫 Connected Students</h3>
+
+<div id="student-list-container">
+    <ul id="student-list">
+        <li>Waiting for connections...</li>
+    </ul>
+</div>
+
+<hr />
+
+<p><strong>Session ID:</strong> classroom1</p>
+<button id="reset-session-btn">Reset Session</button>
+<div id="status"></div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script type="module" src="/js/facilitator-main.js"></script>
+
+<link rel="stylesheet" href="/css/facilitator.css" />
