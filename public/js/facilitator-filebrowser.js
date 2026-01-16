@@ -2,7 +2,7 @@
 // Facilitator File Browser (Table Renderer + Filters)
 // ---------------------------------------------------------
 
-console.log("📁 facilitator-filebrowser.js loaded");
+console.log("📁 [facilitator-filebrowser.js] loaded");
 
 const tableBody = document.getElementById("file-table-body");
 const searchInput = document.getElementById("search-input");
@@ -10,6 +10,12 @@ const filterCategory = document.getElementById("filter-category");
 const filterType = document.getElementById("filter-type");
 const filterUploader = document.getElementById("filter-uploader");
 const sendSelectedBtn = document.getElementById("send-selected-btn");
+
+console.log("📁 [facilitator-filebrowser.js] DOM elements:", {
+    tableBody: !!tableBody,
+    searchInput: !!searchInput,
+    sendSelectedBtn: !!sendSelectedBtn
+});
 
 let allFiles = [];
 let filteredFiles = [];
@@ -20,7 +26,9 @@ let filteredFiles = [];
 
 async function loadFiles() {
     try {
-        const url = `/facilitator/cms/main/files/json`;
+        const sessionSelect = document.getElementById('session-select');
+        const sessionId = sessionSelect ? sessionSelect.value : '';
+        const url = sessionId ? `/api/facilitator/files?sessionId=${encodeURIComponent(sessionId)}` : `/api/facilitator/files`;
         const res = await fetch(url);
 
         if (!res.ok) throw new Error(`Failed to load: ${res.status}`);
@@ -46,7 +54,7 @@ async function loadFiles() {
     } catch (err) {
         console.error("❌ Failed to fetch JSON:", err);
         tableBody.innerHTML = `
-            <tr><td colspan="7" style="text-align:center;color:red;">
+            <tr><td colspan="7" class="text-center" style="color:red;">
                 Failed to load file list.
             </td></tr>`;
     }
@@ -54,6 +62,9 @@ async function loadFiles() {
 
 
 loadFiles();
+
+// Expose reload function globally so other modules can trigger refresh (e.g., on sessionState updates)
+window.reloadFileTable = loadFiles;
 
 
 // ---------------------------------------------------------
@@ -106,7 +117,7 @@ function renderTable() {
     console.log(`renderTable`)
     if (!filteredFiles.length) {
         tableBody.innerHTML = `
-            <tr><td colspan="7" style="text-align:center;">No matching files.</td></tr>
+            <tr><td colspan="11" class="text-center">No matching files.</td></tr>
         `;
         return;
     }
@@ -114,19 +125,60 @@ function renderTable() {
     tableBody.innerHTML = filteredFiles
         .map(f => {
             const dateStr = new Date(f.uploadedAt).toLocaleString();
-            const fid = f.id || f._id || f.filename || "";
+            const fid = f._id || f.id || f.filename || ""; // Ensure `data-id` is set correctly
+            // Use `select-file` class to match server-side templates; keep data-id and data-url for robust mapping
+            const activeBadge = f.active ? '<span class="file-active-badge" title="Active"></span>' : '';
+            
+            // Generate thumbnail for images
+            let thumbnailHTML = '<span class="file-icon--placeholder">—</span>';
+            if (f.mimetype && f.mimetype.startsWith('image/')) {
+                thumbnailHTML = `<img src="${f.url}" class="file-thumbnail" onerror="this.style.display='none';this.nextSibling.classList.remove('file-thumbnail--fallback');this.nextSibling.style.display='inline';" /><span class="file-thumbnail--fallback">📄</span>`;
+            } else if (f.mimetype && f.mimetype.startsWith('video/')) {
+                thumbnailHTML = '<span class="file-icon">🎬</span>';
+            } else if (f.mimetype && f.mimetype.startsWith('audio/')) {
+                thumbnailHTML = '<span class="file-icon">🎵</span>';
+            } else if (f.mimetype && (f.mimetype.includes('pdf') || f.mimetype.includes('document'))) {
+                thumbnailHTML = '<span class="file-icon">📄</span>';
+            }
+            
             return `
-            <tr data-id="${fid}">
-                <td><input type="checkbox" class="file-select" data-id="${f._id}"></td>
+            <tr data-id="${fid}" data-url="${f.url}" data-mimetype="${f.mimetype}" data-originalname="${f.name}" data-size="${f.size}" data-uploadedby="${f.uploadedBy}">
+                <td><input type="checkbox" class="select-file" data-id="${fid}" data-url="${f.url}"></td>
+                <td class="text-center">${thumbnailHTML}</td>
                 <td title="${f.name}">${f.nameTruncated}</td>
+                <td class="text-center">${activeBadge}</td>
                 <td>${f.mimetype}</td>
                 <td>${(f.size / 1024).toFixed(1)} KB</td>
+                <td>${f.project || ''}</td>
                 <td>${f.category}</td>
                 <td>${f.uploadedBy}</td>
+                <td>${f.organisation || ''}</td>
                 <td>${dateStr}</td>
             </tr>`;
         })
         .join("");
+
+    // If the currently selected session is archived, keep interactive controls styled as disabled
+    try {
+        const sessionSelect = document.getElementById('session-select');
+        const archivedAttr = sessionSelect && sessionSelect.options[sessionSelect.selectedIndex]
+            ? sessionSelect.options[sessionSelect.selectedIndex].getAttribute('data-archived')
+            : null;
+        const isArchived = archivedAttr === 'true' || archivedAttr === '1' || archivedAttr === true || archivedAttr === 1;
+        if (isArchived) {
+            const boxes = tableBody.querySelectorAll('.select-file');
+            boxes.forEach(cb => { cb.disabled = true; });
+            // Style buttons as disabled but don't actually disable them (so click events fire)
+            if (sendSelectedBtn) sendSelectedBtn.classList.add('button--disabled');
+            const blankBtn = document.getElementById('blank-session-btn');
+            // removed reset-session-btn logic
+            if (blankBtn) blankBtn.classList.add('button--disabled');
+            if (resetBtn) resetBtn.classList.add('button--disabled');
+        }
+    } catch (err) {
+        // Non-fatal: don't prevent rendering if DOM assumptions fail
+        console.warn('Could not apply archived-state disabling:', err);
+    }
 }
 
 
@@ -166,10 +218,29 @@ filterUploader.addEventListener("change", applyFilters);
 // ---------------------------------------------------------
 
 sendSelectedBtn.addEventListener("click", () => {
-    const selected = [...document.querySelectorAll(".file-select:checked")]
+    console.log('[facilitator-filebrowser.js] Send Selected Files button clicked');
+    // Support both `file-select` (older client) and `select-file` (server template)
+    const selectedInputs = [...document.querySelectorAll(".file-select:checked, .select-file:checked")];
+    console.log('[facilitator-filebrowser.js] Selected checkboxes:', selectedInputs.length);
+
+    const selected = selectedInputs
         .map(input => {
             const id = input.dataset.id;
-            return allFiles.find(f => f._id === id);
+            const url = input.dataset.url || input.closest('tr')?.dataset.url;
+
+            console.log("🔍 Checkbox attributes:", { id, url });
+
+            // Prefer matching by _id, otherwise try url
+            let file = null;
+            if (id) {
+                file = allFiles.find(f => String(f._id) === String(id) || String(f.id) === String(id));
+                console.log("🔗 Matched by id:", file);
+            }
+            if (!file && url) {
+                file = allFiles.find(f => f.url === url || f.filename === url || f._id === url);
+                console.log("🔗 Matched by url:", file);
+            }
+            return file;
         })
         .filter(Boolean);
 

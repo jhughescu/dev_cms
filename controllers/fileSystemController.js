@@ -15,6 +15,7 @@ const {
 const {
     sanitiseInput
 } = require("../utils/sanitiseInput");
+const Session = require("../models/sessionModel");
 
 // ----------------------
 // Multer configuration
@@ -70,7 +71,9 @@ const handleUpload = async (req, res) => {
         const instance = sanitiseInput(req.body.instance || "main");
         const categoryRaw = sanitiseInput(req.body.category || "");
         const uploadedByRaw = sanitiseInput(req.body.uploadedBy || "");
+        const organisationRaw = sanitiseInput(req.body.organisation || "default");
         const category = categoryRaw && categoryRaw.trim() !== "" ? categoryRaw : "none";
+        const organisation = organisationRaw && organisationRaw.trim() !== "" ? organisationRaw : "default";
 
         // 🔹 Step 2: Determine uploader
         const env = process.env.NODE_ENV || "development";
@@ -140,6 +143,7 @@ const handleUpload = async (req, res) => {
             project,
             instance,
             category,
+            organisation,
             uploadedBy: uploader,
             detectedType,
             encoding,
@@ -243,8 +247,10 @@ const handleList = async (req, res) => {
 
 const handleListJson = async (req, res) => {
     try {
-        // Optional: enforce facilitator role
-        if (!req.user || !(req.user.role === 'superuser' || req.user.role === 'facilitator')) {
+        // Check session role (ensureFacilitator middleware already verified this)
+        // But keep a basic check for safety
+        const role = req.session?.role;
+        if (!role || (role !== 'Facilitator' && role !== 'admin')) {
             return res.status(403).json({
                 error: 'Access denied'
             });
@@ -252,6 +258,12 @@ const handleListJson = async (req, res) => {
 
         // Use the same filter logic you already have for listing
         const filter = {};
+        
+        // Filter by organisation (facilitators see only their org's files + "all" files, admins see all)
+        if (role === 'Facilitator' && req.session.organisation) {
+            filter.organisation = { $in: [req.session.organisation, 'all'] };
+        }
+        
         // Optionally add project/instance filtering if req.query.project present
         const {
             project,
@@ -260,15 +272,35 @@ const handleListJson = async (req, res) => {
         if (project) filter.project = project;
         if (instance) filter.instance = instance;
 
+        const { sessionId } = req.query;
+        let activeIds = new Set();
+        if (sessionId) {
+            try {
+                const session = await Session.findOne({ sessionId }).lean();
+                if (session && Array.isArray(session.currentState)) {
+                    activeIds = new Set(session.currentState.map(id => String(id)));
+                }
+            } catch (err) {
+                console.warn('[handleListJson] Unable to load session for active markers:', err);
+            }
+        }
+
         const files = await File.find(filter)
             .sort({
                 uploadedAt: -1
             })
             .lean()
-            .select('_id originalName filename mimetype size uploadedAt url project instance category uploadedBy');
+            .select('_id originalName filename mimetype size uploadedAt url project instance category uploadedBy organisation');
+
+        // Map to match client expectations (name instead of originalName)
+        const mappedFiles = files.map(f => ({
+            ...f,
+            name: f.originalName || f.filename,
+            active: activeIds.has(String(f._id))
+        }));
 
         return res.json({
-            files
+            files: mappedFiles
         });
     } catch (err) {
         console.error('❌ Error fetching files JSON:', err);

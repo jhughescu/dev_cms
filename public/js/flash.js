@@ -36,6 +36,7 @@ function fadeAndDismiss(flash, timeout = 500) {
  * @param {number} [duration=4000] - How long before auto-dismiss (ms)
  */
 export function addFlashMessage(message, type = "success", duration = 4000) {
+    console.log
     let container = document.getElementById("flash-container");
     if (!container) {
         container = document.createElement("div");

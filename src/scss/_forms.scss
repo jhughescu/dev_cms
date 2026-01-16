@@ -8,6 +8,47 @@ form {
     gap: 1rem;
 }
 
+.form-inline {
+    display: inline-block;
+    gap: 0;
+}
+
+.form-group {
+    margin-bottom: 1em;
+}
+
+.form-label,
+label {
+    display: block;
+    margin-bottom: 0.5em;
+    font-weight: 600;
+}
+
+.form-control,
+input[type="text"],
+input[type="number"],
+input[type="email"],
+input[type="password"],
+textarea,
+select {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    background: #fafafa;
+    font: inherit;
+}
+
+textarea {
+    resize: vertical;
+    min-height: 120px;
+}
+
+.form-hint {
+    color: #666;
+    font-size: 0.9em;
+}
+
 input[type="file"] {
     border: 1px solid #ccc;
     padding: 0.5rem;
@@ -23,10 +64,20 @@ button {
     border-radius: 6px;
     cursor: pointer;
     font-size: 1rem;
+    max-width: 300px;
+    width: fit-content;
 
     &:hover {
         // Modern replacement for lighten()
         background-color: color.adjust(v.$primary-color, $lightness: 10%);
+    }
+
+    &.warning {
+        background-color: #c0392b;
+
+        &:hover {
+            background-color: color.adjust(#c0392b, $lightness: 5%);
+        }
     }
 }
 

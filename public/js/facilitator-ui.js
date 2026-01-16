@@ -1,3 +1,4 @@
+import { addFlashMessage } from "./flash.js";
 export class FacilitatorUI {
     constructor(socketInstance) {
         this.socket = socketInstance || null;
@@ -15,12 +16,36 @@ export class FacilitatorUI {
         // Bind custom DOM events
         document.addEventListener("studentJoined", (e) => this.addStudent(e.detail));
         document.addEventListener("studentLeft", (e) => this.removeStudent(e.detail.username));
+        document.addEventListener("studentListUpdated", (e) => this.renderStudents(e.detail));
         document.addEventListener("sessionReset", () => this.resetList());
         document.addEventListener("studentActive", (e) => this.markActive(e.detail));
+        document.addEventListener("sendFilesToStudents", (e) => this.handleFilesSent(e.detail));
+
+        // Listen for sessionLocked event and show a flash message
+        document.addEventListener("sessionLocked", (e) => {
+            const msg = e.detail && e.detail.message ? e.detail.message : "Session is archived and cannot be modified.";
+            console.log('[FacilitatorUI] sessionLocked event received:', msg);
+            addFlashMessage(msg, "error", 5000);
+            // Don't use showStatus - flash message is enough
+        });
+
+        // Remove student button handler (event delegation)
+        if (this.studentList) {
+            this.studentList.addEventListener("click", (e) => {
+                const btn = e.target.closest("button.remove-student-btn");
+                if (!btn) return;
+                const username = btn.dataset.username;
+                if (this.socket && typeof this.socket.removeStudent === "function") {
+                    this.socket.removeStudent(username);
+                }
+            });
+        }
 
         // Start periodic updates
         this.startDurationUpdates();
     }
+
+    // Remove duplicate sessionLocked event listener outside constructor (invalid syntax)
 
     addStudent({
         username,
@@ -62,6 +87,7 @@ export class FacilitatorUI {
 
         const list = document.getElementById("student-list");
         list.innerHTML = "";
+        this.students.clear();
 
         if (!students || students.length === 0) {
             list.innerHTML = "<li>No students connected.</li>";
@@ -70,18 +96,29 @@ export class FacilitatorUI {
 
         students.forEach(student => {
             const li = document.createElement("li");
-            li.classList.add(student.connected ? "online" : "offline");
+            li.classList.add("student-list-item", student.connected ? "online" : "offline");
 
             const joined = student.joinedAt ? new Date(student.joinedAt).toLocaleTimeString() : "—";
             const lastActive = student.lastActive ? new Date(student.lastActive).toLocaleTimeString() : "—";
+            const browser = student.browser || "—";
+            const os = student.os || "—";
 
             li.innerHTML = `
-                <strong>${student.username}</strong> — ${student.connected ? "🟢 Online" : "🔴 Offline"}<br>
-                Joined: ${joined}<br>
-                <span class="duration">0m</span> ago<br>
-                <small class="last-active">Last active: ${lastActive}</small>
+                <div style="flex: 0 0 150px;"><strong>${student.username}</strong></div>
+                <div style="flex: 0 0 100px;">${student.connected ? "🟢 Online" : "🔴 Offline"}</div>
+                <div style="flex: 0 0 250px;">Joined: ${joined} | <span class="duration">0m</span></div>
+                <div style="flex: 0 0 120px;">${browser} / ${os}</div>
+                <div style="flex: 1; min-width: 150px;"><small class="last-active">Last active: ${lastActive}</small></div>
+                <button class="remove-student-btn" data-username="${student.username}" style="flex-shrink: 0;">Remove</button>
             `;
             list.appendChild(li);
+
+            // Track for duration and activity updates
+            this.students.set(student.username, {
+                joinedAt: student.joinedAt ? new Date(student.joinedAt) : new Date(),
+                element: li,
+                idleTimer: null
+            });
         });
     }
 
@@ -130,18 +167,39 @@ export class FacilitatorUI {
             activeEl.textContent = `Last active: ${time}`;
         }
 
-        element.style.opacity = 1.0;
+        element.classList.remove('student-list-item--idle');
         clearTimeout(data.idleTimer);
         data.idleTimer = setTimeout(() => {
-            element.style.opacity = 0.5;
+            element.classList.add('student-list-item--idle');
         }, 90000);
     }
 
+    handleFilesSent(detail) {
+        const files = detail?.files || [];
+        const count = files.length;
+        if (this.socket) {
+            if (count === 1 && typeof this.socket.sendAsset === 'function') {
+                console.log('FacilitatorUI: sending single asset');
+                try { this.socket.sendAsset(files[0]); } catch (e) { console.error('Failed single asset send', e); }
+            } else if (count > 1 && typeof this.socket.sendAssetsBatch === 'function') {
+                console.log(`FacilitatorUI: sending batch of ${count} assets`);
+                try { this.socket.sendAssetsBatch(files); } catch (e) { console.error('Failed batch asset send', e); }
+            } else {
+                console.warn('FacilitatorUI: socket layer missing appropriate send method(s)');
+            }
+        } else {
+            console.warn('FacilitatorUI: socket layer not set');
+        }
+
+        addFlashMessage(`${count} file${count !== 1 ? 's' : ''} sent to students.`);
+    }
     attachFileHandlers(socketLayer) {
         if (!socketLayer) {
             console.warn("⚠️ attachFileHandlers called without socketLayer");
             return;
         }
+        // Store the socket layer on the UI instance so other methods can use it
+        this.socket = socketLayer;
 
         document.querySelectorAll(".file-item button").forEach((button) => {
             button.addEventListener("click", () => {
@@ -158,14 +216,7 @@ export class FacilitatorUI {
             });
         });
 
-        const resetBtn = document.getElementById("reset-session-btn");
-        if (resetBtn) {
-            resetBtn.addEventListener("click", () => {
-                if (confirm("Reset this session? All students will be disconnected.")) {
-                    socketLayer.resetSession();
-                }
-            });
-        }
+        // reset-session-btn logic fully removed
     }
 
     /** Load file list via JSON + render using Handlebars template */
@@ -233,12 +284,12 @@ export class FacilitatorUI {
                     (!categoryVal || category === categoryVal) &&
                     (!uploaderVal || uploader === uploaderVal);
 
-                tr.style.display = show ? "" : "none";
+                tr.style.display = show ? "" : "none"; // Keep display toggle as inline
             });
 
             // Sort visible rows only
             const sorted = rows
-                .filter(tr => tr.style.display !== "none")
+                .filter(tr => tr.style.display !== "none") // Reading inline style from filter
                 .sort((a, b) => {
                     let v1 = a.querySelector(`td:nth-child(${this.getSortColumn(sortBy)})`).textContent;
                     let v2 = b.querySelector(`td:nth-child(${this.getSortColumn(sortBy)})`).textContent;
@@ -268,23 +319,35 @@ export class FacilitatorUI {
         // Send selected files
         const sendBtn = controls.querySelector("#send-selected");
         sendBtn.addEventListener("click", () => {
+            console.log(`clicked send selected`);
             const selectedRows = Array.from(tbody.querySelectorAll(".select-file:checked"));
             if (selectedRows.length === 0) return alert("No files selected.");
 
             const assets = selectedRows.map(cb => {
                 const row = cb.closest("tr");
+                if (!row || !row.dataset.url) {
+                    console.warn("Skipping row with missing data attributes.");
+                    return null;
+                }
                 return {
                     url: row.dataset.url,
-                    mimetype: row.dataset.mimetype,
-                    originalName: row.dataset.originalName,
-                    size: row.dataset.size,
-                    uploadedBy: row.dataset.uploadedBy
+                    mimetype: row.dataset.mimetype || "unknown",
+                    originalName: row.dataset.originalName || "Unnamed",
+                    size: row.dataset.size || "0",
+                    uploadedBy: row.dataset.uploadedBy || "unknown"
                 };
-            });
+            }).filter(asset => asset !== null); // Remove invalid rows
 
-            if (this.socket && this.socket.sendAsset) {
-                assets.forEach(a => this.socket.sendAsset(a));
+            if (this.socket) {
+                if (assets.length === 1 && this.socket.sendAsset) {
+                    this.socket.sendAsset(assets[0]);
+                } else if (assets.length > 1 && this.socket.sendAssetsBatch) {
+                    this.socket.sendAssetsBatch(assets);
+                } else {
+                    console.warn('No suitable send method available on socket for selected assets.');
+                }
                 this.showStatus(`${assets.length} file(s) sent to students.`);
+                addFlashMessage(`${assets.length} file(s) sent to students.`)
             }
         });
     }

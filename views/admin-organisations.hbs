@@ -1,0 +1,194 @@
+<div class="view-shell admin-view">
+    <h1>Manage Organisations</h1>
+    
+    {{#if flash.success_msg}}
+        <div class="alert alert-success">
+            {{flash.success_msg}}
+        </div>
+    {{/if}}
+    
+    {{#if flash.error_msg}}
+        <div class="alert alert-error">
+            {{flash.error_msg}}
+        </div>
+    {{/if}}
+    
+    <div class="view-grid">
+        <!-- Create Organisation Form -->
+        <div class="col-1 card">
+            <h2>Create New Organisation</h2>
+            <form method="POST" action="/admin/organisations/create">
+                <div class="form-group">
+                    <label class="form-label" for="name">Name:</label>
+                    <input class="form-control" type="text" id="name" name="name" required placeholder="e.g., Coventry University">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="code">Code:</label>
+                    <input class="form-control" type="text" id="code" name="code" required placeholder="e.g., cu (lowercase, unique)">
+                    <small class="form-hint">Lowercase, no spaces. Used in URLs.</small>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="description">Description (optional):</label>
+                    <textarea class="form-control" id="description" name="description" rows="3" placeholder="Brief description of the organisation"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="maxFacilitators">Max Facilitators:</label>
+                    <input class="form-control" type="number" id="maxFacilitators" name="maxFacilitators" value="3" min="1" max="100">
+                </div>
+                
+                <button type="submit">
+                    Create Organisation
+                </button>
+            </form>
+        </div>
+        
+        <!-- Organisations List -->
+        <div class="col-2">
+            <h2>Existing Organisations</h2>
+            
+            {{#if organisations.length}}
+                <div class="table-shell">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Code</th>
+                                <th class="text-center">Facilitators</th>
+                                <th class="text-center">Status</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {{#each organisations}}
+                                <tr>
+                                    <td>
+                                        <strong>{{name}}</strong>
+                                        {{#if description}}
+                                            <br><small class="text-muted">{{description}}</small>
+                                        {{/if}}
+                                        {{#if qrCode}}
+                                            <div class="stack-sm">
+                                                <details>
+                                                    <summary class="text-muted">📱 Registration QR</summary>
+                                                    <div class="qr-card">
+                                                        <img src="{{qrCode}}" alt="Registration QR Code" width="150" height="150">
+                                                        <p class="qr-caption">Scan to register as facilitator</p>
+                                                    </div>
+                                                </details>
+                                            </div>
+                                        {{/if}}
+                                    </td>
+                                    <td><code>{{code}}</code></td>
+                                    <td>
+                                        <div class="text-center">
+                                            <strong>{{facilitators.length}} / {{maxFacilitators}}</strong>
+                                        </div>
+                                        {{#if facilitators.length}}
+                                            <details>
+                                                <summary class="text-muted">View list</summary>
+                                                <ul class="text-muted list-indent">
+                                                    {{#each facilitators}}
+                                                        <li>{{email}}</li>
+                                                    {{/each}}
+                                                </ul>
+                                            </details>
+                                        {{else}}
+                                            <div class="text-muted text-center">No facilitators</div>
+                                        {{/if}}
+                                    </td>
+                                    <td class="text-center">
+                                        {{#if active}}
+                                            <span class="tag-active">✓ Active</span>
+                                        {{else}}
+                                            <span class="tag-inactive">✗ Inactive</span>
+                                        {{/if}}
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="stack-sm">
+                                            <div>
+                                                <small class="text-muted">Registration Token:</small>
+                                                <code class="code-pill">{{#if token}}{{token}}{{else}}N/A{{/if}}</code>
+                                            </div>
+                                            <div class="inline-actions">
+                                                <form class="form-inline" method="POST" action="/admin/organisations/{{_id}}/toggle">
+                                                    <button type="submit">
+                                                        {{#if active}}Deactivate{{else}}Activate{{/if}}
+                                                    </button>
+                                                </form>
+                                                <form class="form-inline" method="POST" action="/admin/organisations/{{_id}}/regenerate-token" onsubmit="return confirm('Generate a new token for this organisation? Existing links will require the new token.');">
+                                                    <button type="submit">
+                                                        Regenerate Token
+                                                    </button>
+                                                </form>
+                                                <form class="form-inline" method="POST" action="/admin/organisations/{{_id}}/delete" onsubmit="return confirm('Are you sure you want to delete this organisation? This will fail if any facilitators are assigned to it.');">
+                                                    <button type="submit" class="warning">
+                                                        Delete
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {{/each}}
+                        </tbody>
+                    </table>
+                </div>
+            {{else}}
+                <p class="card card--muted text-center">
+                    No organisations created yet. Use the form on the left to create one.
+                </p>
+            {{/if}}
+        </div>
+    </div>
+    
+    <!-- Facilitators List -->
+    <div class="section">
+        <h2>Registered Facilitators</h2>
+        
+        {{#if facilitators.length}}
+            <div class="table-shell">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Email</th>
+                            <th>Organisation</th>
+                            <th>Registered</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{#each facilitators}}
+                            <tr>
+                                <td>{{email}}</td>
+                                <td>
+                                    {{#if organisation}}
+                                        <code>{{organisation}}</code>
+                                    {{else}}
+                                        <span class="text-muted">N/A</span>
+                                    {{/if}}
+                                </td>
+                                <td>
+                                    {{#if createdAt}}
+                                        {{formatDate createdAt}}
+                                    {{else}}
+                                        <span class="text-muted">Unknown</span>
+                                    {{/if}}
+                                </td>
+                            </tr>
+                        {{/each}}
+                    </tbody>
+                </table>
+            </div>
+        {{else}}
+            <p class="card card--muted text-center mt-1">
+                No facilitators registered yet.
+            </p>
+        {{/if}}
+    </div>
+    
+    <div class="section section-divider">
+        <a href="/admin">&larr; Back to Admin Dashboard</a>
+    </div>
+</div>

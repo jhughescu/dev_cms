@@ -1,68 +1,516 @@
 <h1>{{title}}</h1>
 
-<p>Select one or more assets to send to students:</p>
+<div class="info-strip">
+    <strong>👤 Logged in as:</strong> {{facilitator}}
+    {{#if sessions}}
+    <span class="info-strip__separator">|</span>
+    <span><strong>Sessions:</strong> {{sessions.length}}</span>
+    {{/if}}
+</div>
+
+{{#if flash}}
+<script id="flash-data" type="application/json">{{{json flash}}}</script>
+{{/if}}
+
+<script>
+    // Expose server-provided facilitator context for external scripts
+    window.__FACILITATOR_CONTEXT__ = {
+        sessionId: {{{json sessionId}}},
+        sessionStatus: {{{json currentSession.status}}},
+        organisation: {{{json currentSession.organisation}}},
+        facilitator: {{{json facilitator}}},
+        sessionPassword: {{{json currentSession.sessionPassword}}}
+    };
+</script>
+
+<!-- Hidden data container for initial slides from database -->
+<div class="is-hidden" data-initial-slides="{{initialSlides}}"></div>
+
+<script src="/js/facilitator-helpers.js"></script>
+<script src="/js/facilitator-share.js"></script>
+<script src="/js/facilitator-session-selector.js"></script>
+<script src="/js/facilitator-session-editor.js"></script>
+<script src="/js/facilitator-slide-buttons.js"></script>
+<script src="/js/facilitator-slide-listeners.js"></script>
+
+<!-- Session Selector + Controls (split into panels) -->
+<div class="panel-row">
+    <!-- Panel 1: Session selection and other actions (now on the left) -->
+    <div class="panel-col card card--flush stack-sm">
+        <div>
+            <label for="session-select"><strong>Choose Session:</strong></label>
+            <select id="session-select" class="form-control">
+                {{#if sessions}}
+                    {{#each sessions}}
+                        <option value="{{this.sessionId}}" data-status="{{this.status}}" data-archived="{{this.archived}}" {{#ifEq this.sessionId ../sessionId}}selected{{/ifEq}}>
+                            {{this.sessionId}}
+                            {{#if this.status}}
+                                [{{this.status}}]
+                            {{else}}
+                                {{#if this.archived}}(archived){{/if}}
+                            {{/if}}
+                        </option>
+                    {{/each}}
+                {{else}}
+                    <option disabled>No sessions</option>
+                {{/if}}
+            </select>
+        </div>
+
+        <div id="session-actions" class="inline-actions">
+            <form class="form-inline" id="activate-form" method="post" action="/sessions/{{sessionId}}/activate">
+                <button type="submit" id="activate-btn">Activate</button>
+            </form>
+            <form class="form-inline" id="archive-form" method="post" action="/sessions/{{sessionId}}/archive">
+                <button type="submit" id="archive-btn">Archive</button>
+            </form>
+            <form class="form-inline" id="unarchive-form" method="post" action="/sessions/{{sessionId}}/unarchive">
+                <button type="submit" id="unarchive-btn">Unarchive</button>
+            </form>
+            <form class="form-inline" id="delete-form" method="post" action="/sessions/{{sessionId}}/delete">
+                <button type="submit" id="delete-btn" class="warning" onclick="return confirm('Are you sure you want to delete this session? This cannot be undone.');">Delete</button>
+            </form>
+            <button id="export-csv-btn">Export CSV</button>
+        </div>
+
+        <div id="status"></div>
+    </div>
+    
+    <script>
+        // Form submit handlers for activate/archive/unarchive
+        window.FacilitatorSessionSelector.initFormHandlers();
+    </script>
+
+    <!-- Panel 2: Create new session (now on the right) -->
+    <div class="panel-col card card--flush">
+        <form id="create-session-form" class="stack-sm" method="post" action="/sessions/create">
+            <label class="form-label" for="create-session-id"><strong>Create New Session</strong></label>
+            <div class="input-row">
+                <input class="form-control" type="text" name="sessionId" id="create-session-id" placeholder="Session ID (required)" required />
+                <button type="submit">Create</button>
+            </div>
+            <div class="text-muted">Spaces will be replaced with dashes.</div>
+        </form>
+    </div>
+</div>
+
+<!-- Session Editor (full-width) - Only shown for pending sessions -->
+<div id="session-editor-container">
+    <label id="session-editor-label">Session Editor</label>
+    <div class="button-row">
+        <button id="new-slide-btn">Insert Slide</button>
+        <button id="slide-left-btn">←</button>
+        <button id="slide-right-btn">→</button>
+    </div>
+    <div id="slide-grid">
+        <!-- Slides will be added here as 50px squares -->
+    </div>
+    
+    <!-- Slide Controls (shown when a slide is selected) -->
+    <div id="slide-controls">
+        <!-- Left Column: Title and Buttons -->
+        <div>
+            <span id="selected-slide-label">Slide #</span>
+            <button id="add-assets-btn">Add Assets</button>
+            <button id="delete-slide-btn">Delete Slide</button>
+        </div>
+        
+        <!-- Center Column: Assets List -->
+        <div>
+            <label>Slide Assets:</label>
+            <ul id="slide-assets-list">
+            </ul>
+        </div>
+        
+        <!-- Right Column: Asset Preview Thumbnails -->
+        <div>
+            <label>Preview:</label>
+            <div id="asset-thumbnails">
+            </div>
+        </div>
+    </div>
+</div>
 
 <!-- 🔍 Filter + Search Controls -->
 <div id="file-filters" class="filters">
     <input type="text" id="search-input" placeholder="Search files..." />
-
     <select id="filter-category">
         <option value="">All Categories</option>
     </select>
-
     <select id="filter-type">
         <option value="">All Types</option>
     </select>
-
     <select id="filter-uploader">
         <option value="">All Uploaders</option>
     </select>
 </div>
 
+<button id="send-selected-btn">Send Selected Files</button>
+
 <!-- 📁 File Table -->
+<div class="table-scroll">
 <table id="file-table" class="file-table">
     <thead>
         <tr>
             <th>Select</th>
+            <th>Thumbnail</th>
             <th>Name</th>
+            <th>Active</th>
             <th>Mimetype</th>
             <th>Size</th>
+            <th>Project</th>
             <th>Category</th>
             <th>Uploaded By</th>
+            <th>Organisation</th>
             <th>Uploaded At</th>
         </tr>
     </thead>
     <tbody id="file-table-body">
         <tr>
-            <td colspan="7" style="text-align:center;">Loading files...</td>
+            <td><input type="checkbox" class="select-file" /></td>
+            <td>—</td>
+            <td>File Name</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
         </tr>
     </tbody>
 </table>
+</div>
 
-<button id="send-selected-btn">Send Selected Files</button>
+ 
 
-<hr/>
+<!-- Session Access Information -->
+{{#if currentSession}}
+{{#if currentSession.sessionPassword}}
+<div class="status-card status-card--success">
+    <h3 class="status-card__title">🔑 Student Access Information</h3>
+    
+    <div class="spacing-bottom">
+        <strong>Session Password:</strong> 
+        <code class="code-pill code-pill--accent code-pill--large">{{currentSession.sessionPassword}}</code>
+        <button id="copy-password-btn">Copy</button>
+    </div>
+    
+    <div class="inline-wrap">
+        <div class="inline-wrap__col">
+            <strong>Simple URL (password required):</strong><br>
+            <code id="simple-url" class="code-pill spacing-top">
+                {{#if currentSession.organisation}}
+                    {{currentSession.organisation}}/{{currentSession.sessionId}}
+                {{else}}
+                    default/{{currentSession.sessionId}}
+                {{/if}}
+            </code>
+            <button id="copy-simple-url-btn">Copy</button>
+        </div>
+        <button id="copy-share-link-btn">Copy Share Link</button>
+        <button id="show-qr-btn">Show QR Code</button>
+    </div>
+    
+    <div class="note spacing-top">
+        <em>Students can use the simple URL with the password, or scan the QR code for instant access.</em>
+    </div>
+</div>
+{{else}}
+<div class="status-card status-card--warning">
+    <strong>⚠️ Legacy Session:</strong> This session was created before the password system was implemented. 
+    Create a new session to enable password-protected and QR code access.
+</div>
+{{/if}}
+{{/if}}
 
+<!-- Connected Students -->
 <h3>👩‍🏫 Connected Students</h3>
-
 <div id="student-list-container">
     <ul id="student-list">
         <li>Waiting for connections...</li>
     </ul>
 </div>
 
-<hr/>
+ 
 
-<p><strong>Session ID:</strong> classroom1</p>
-<button id="reset-session-btn">Reset Session</button>
-<div id="status"></div>
+
+<!-- Flash message container (for JS flash.js) -->
+<div id="flash-container"></div>
 
 <script src="/socket.io/socket.io.js"></script>
-
-<!-- The new client-side browser logic -->
 <script type="module" src="/js/facilitator-filebrowser.js"></script>
-
 <script type="module" src="/js/facilitator-main.js"></script>
-
+<!-- Remove direct flash.js import; only import via ES module in facilitator-ui.js -->
 <link rel="stylesheet" href="/css/facilitator.css" />
-<!--<link rel="stylesheet" href="/css/facilitator-filebrowser.css" />-->
+
+<script>
+    // Session selector behaviour: switch session on change and update archive/unarchive forms
+    window.FacilitatorSessionSelector.init();
+
+    // Initialize SessionEditor class (will gradually replace inline IIFE)
+    const sessionEditor = new window.SessionEditor({
+        sessionId: '{{sessionId}}',
+        sessionStatus: '{{currentSession.status}}'
+    });
+    sessionEditor.init();
+    
+    // Expose globally for inline code to transition
+    window.sessionEditor = sessionEditor;
+
+    // Session Editor: Backend-integrated slide functionality
+    (function() {
+        const newSlideBtn = document.getElementById('new-slide-btn');
+        const slideLeftBtn = document.getElementById('slide-left-btn');
+        const slideRightBtn = document.getElementById('slide-right-btn');
+        const slideGrid = document.getElementById('slide-grid');
+        const slideAssetsList = document.getElementById('slide-assets-list');
+        const addAssetsBtn = document.getElementById('add-assets-btn');
+        const deleteSlideBtn = document.getElementById('delete-slide-btn');
+        const slideControls = document.getElementById('slide-controls');
+        const selectedLabel = document.getElementById('selected-slide-label');
+        const assetThumbnails = document.getElementById('asset-thumbnails');
+        let currentSessionId = '{{sessionId}}';
+        let currentSessionStatus = '{{currentSession.status}}'; // Track session status for read-only mode
+        const editorLabel = document.getElementById('session-editor-label');
+        
+        // Expose to global for form handlers
+        window.currentSessionStatus = currentSessionStatus;
+        
+        // Update heading based on session status
+        function updateEditorLabel() {
+            if (editorLabel) {
+                if (window.currentSessionStatus === 'active') {
+                    editorLabel.textContent = 'Session Controller';
+                } else {
+                    editorLabel.textContent = 'Session Editor';
+                }
+            }
+        }
+        window.updateEditorLabel = updateEditorLabel;
+        updateEditorLabel();
+        let currentFocusedSlideId = null;
+        let lastMaxSlideId = null; // Track previous max slideId to detect new slides
+        let slidesCache = []; // Keep the current slide order for boundary checks
+        let ensuredInitialSlides = false; // Ensure B/E slides exist
+
+        // Verify DOM elements exist
+        console.log('[sessionEditor] slideAssetsList element:', slideAssetsList);
+        console.log('[sessionEditor] assetThumbnails element:', assetThumbnails);
+
+        // Event delegation: handle asset name clicks
+        if (slideAssetsList) {
+            slideAssetsList.addEventListener('click', (e) => {
+                console.log('[assetList] Click event fired on slideAssetsList, target:', e.target.tagName);
+                const assetNameEl = e.target.closest('.asset-name');
+                if (!assetNameEl) {
+                    console.log('[assetList] Target is not an asset-name element');
+                    return;
+                }
+            
+            const assetName = assetNameEl.getAttribute('data-asset-name');
+            console.log('[assetList] Asset name clicked via delegation:', assetName);
+            e.preventDefault();
+            
+            // Find the asset URL from the file table
+            const fileRows = document.querySelectorAll('#file-table-body tr');
+            let assetUrl = null;
+            console.log('[assetList] Found file rows:', fileRows.length);
+            fileRows.forEach(row => {
+                const nameCell = row.querySelector('td:nth-child(3)');
+                if (nameCell && nameCell.textContent.trim() === assetName) {
+                    assetUrl = row.dataset.url;
+                    console.log('[assetList] Found asset URL:', assetUrl);
+                }
+            });
+            
+            // Get current assets count
+            const currentAssets = slideAssetsList.querySelectorAll('li');
+            const currentAssetCount = currentAssets.length;
+            console.log('[assetList] Current asset count:', currentAssetCount);
+            
+            if (currentAssetCount >= 5) {
+                if (typeof window.addFlashMessage === 'function') {
+                    window.addFlashMessage('This slide already has 5 assets (maximum limit reached)', 'warning', 4000);
+                } else {
+                    alert('This slide already has 5 assets (maximum limit reached)');
+                }
+                return;
+            }
+            
+            // Display preview in the Preview pane
+            const previewDiv = document.createElement('div');
+            previewDiv.setAttribute('data-manual-preview', 'true');  // Mark as manual preview
+            previewDiv.style.position = 'relative';
+            previewDiv.style.width = '80px';
+            previewDiv.style.height = '80px';
+            previewDiv.style.margin = '0.5em';
+            previewDiv.style.borderRadius = '4px';
+            previewDiv.style.border = '1px solid #ccc';
+            previewDiv.style.background = '#f0f0f0';
+            previewDiv.style.display = 'flex';
+            previewDiv.style.alignItems = 'center';
+            previewDiv.style.justifyContent = 'center';
+            previewDiv.style.overflow = 'hidden';
+            
+            if (assetUrl) {
+                const img = document.createElement('img');
+                img.src = assetUrl;
+                img.style.maxWidth = '100%';
+                img.style.maxHeight = '100%';
+                img.style.objectFit = 'cover';
+                img.style.opacity = '0.5';
+                img.onerror = () => {
+                    previewDiv.textContent = '📄';
+                    previewDiv.style.fontSize = '2em';
+                    previewDiv.style.color = '#999';
+                };
+                previewDiv.appendChild(img);
+            } else {
+                previewDiv.textContent = '📄';
+                previewDiv.style.fontSize = '2em';
+                previewDiv.style.color = '#999';
+            }
+            
+            // Add title tooltip
+            previewDiv.title = assetName;
+            
+            // Append to preview pane
+            assetThumbnails.appendChild(previewDiv);
+            
+            console.log('[preview] Added preview for:', assetName);
+            
+            if (typeof window.addFlashMessage === 'function') {
+                window.addFlashMessage(`Preview of "${assetName}" added`, 'info', 2000);
+            }
+            });
+        } else {
+            console.warn('[sessionEditor] slideAssetsList element not found!');
+        }
+
+        // Event delegation: handle file table checkbox changes for preview
+        const fileTableBody = document.getElementById('file-table-body');
+        if (fileTableBody) {
+            console.log('[sessionEditor] File table body found, attaching checkbox listener');
+            fileTableBody.addEventListener('change', (e) => {
+                if (!e.target.classList.contains('select-file')) return;
+                
+                console.log('[fileTable] Checkbox changed:', e.target.checked);
+                
+                const checkbox = e.target;
+                const row = checkbox.closest('tr');
+                if (!row) return;
+                
+                const nameCell = row.querySelector('td:nth-child(3)');
+                if (!nameCell) return;
+                
+                const assetName = nameCell.textContent.trim();
+                const assetUrl = row.dataset.url;
+                
+                console.log('[fileTable] Asset:', assetName, 'checked:', checkbox.checked);
+                
+                if (checkbox.checked) {
+                    // Check if slide already has 5 assets (including actual assets + previews)
+                    const currentAssets = slideAssetsList.querySelectorAll('li');
+                    const manualPreviews = assetThumbnails.querySelectorAll('[data-manual-preview="true"]');
+                    const totalCount = currentAssets.length + manualPreviews.length;
+                    
+                    console.log('[fileTable] Current assets:', currentAssets.length, 'Manual previews:', manualPreviews.length, 'Total:', totalCount);
+                    
+                    if (totalCount >= 5) {
+                        checkbox.checked = false;  // Uncheck the box
+                        if (typeof window.addFlashMessage === 'function') {
+                            window.addFlashMessage('Maximum 5 assets per slide (including previews)', 'warning', 4000);
+                        } else {
+                            alert('Maximum 5 assets per slide (including previews)');
+                        }
+                        return;
+                    }
+                    
+                    // Add 50% opacity preview
+                    const previewDiv = document.createElement('div');
+                    previewDiv.setAttribute('data-manual-preview', 'true');
+                    previewDiv.setAttribute('data-asset-name', assetName);
+                    previewDiv.style.position = 'relative';
+                    previewDiv.style.width = '80px';
+                    previewDiv.style.height = '80px';
+                    previewDiv.style.margin = '0.5em';
+                    previewDiv.style.borderRadius = '4px';
+                    previewDiv.style.border = '2px solid #007bff';
+                    previewDiv.style.background = '#f0f0f0';
+                    previewDiv.style.display = 'flex';
+                    previewDiv.style.alignItems = 'center';
+                    previewDiv.style.justifyContent = 'center';
+                    previewDiv.style.overflow = 'hidden';
+                    
+                    if (assetUrl) {
+                        const img = document.createElement('img');
+                        img.src = assetUrl;
+                        img.style.maxWidth = '100%';
+                        img.style.maxHeight = '100%';
+                        img.style.objectFit = 'cover';
+                        img.style.opacity = '0.5';
+                        img.onerror = () => {
+                            previewDiv.textContent = '📄';
+                            previewDiv.style.fontSize = '2em';
+                            previewDiv.style.color = '#999';
+                        };
+                        previewDiv.appendChild(img);
+                    } else {
+                        previewDiv.textContent = '📄';
+                        previewDiv.style.fontSize = '2em';
+                        previewDiv.style.color = '#999';
+                        previewDiv.style.opacity = '0.5';
+                    }
+                    
+                    previewDiv.title = assetName;
+                    assetThumbnails.appendChild(previewDiv);
+                    
+                    console.log('[preview] Added preview for selected file:', assetName);
+                } else {
+                    // Remove preview when unchecked
+                    const existingPreview = assetThumbnails.querySelector(`[data-manual-preview="true"][data-asset-name="${assetName}"]`);
+                    if (existingPreview) {
+                        existingPreview.remove();
+                        console.log('[preview] Removed preview for unselected file:', assetName);
+                    }
+                }
+            });
+        } else {
+            console.warn('[sessionEditor] File table body not found!');
+        }
+
+        // Delegate rendering functions to SessionEditor class methods
+        // Expose rendering functions - delegate to SessionEditor class
+        window.renderAssetsList = (assetsText) => window.sessionEditor.renderAssetsList(assetsText);
+        window.renderAssetThumbnails = (assetsText) => window.sessionEditor.renderAssetThumbnails(assetsText);
+        window.renderSlidesFromDB = (slides, selectSlideId = null) => window.sessionEditor.renderSlidesFromDB(slides, selectSlideId);
+
+        // Load initial slides from DOM data (set by server)
+        const initialSlidesData = document.querySelector('[data-initial-slides]');
+        if (initialSlidesData && initialSlidesData.dataset.initialSlides) {
+            try {
+                const slides = JSON.parse(initialSlidesData.dataset.initialSlides);
+                // Set up tracking for new slides
+                if (slides && slides.length > 0) {
+                    const slideIds = slides.map(s => s.slideId);
+                    lastMaxSlideId = Math.max(...slideIds);
+                }
+                renderSlidesFromDB(slides);
+            } catch (e) {
+                console.error("Failed to parse initial slides:", e);
+            }
+        }
+
+        // Now set up socket listeners with the initialized ref
+        const lastMaxSlideIdRef = { value: lastMaxSlideId };
+        
+        window.FacilitatorSlideListeners.setupSocketListeners({
+            getSocketLayer: () => window.sessionEditor.getSocketLayer(),
+            renderSlidesFromDB,
+            lastMaxSlideIdRef
+        });
+    })();
+</script>
+</script>

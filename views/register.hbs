@@ -1,0 +1,35 @@
+<h2>Register (Facilitator)</h2>
+{{#if error_msg}}<div class="error">{{error_msg}}</div>{{/if}}
+
+<div class="card card--flush">
+  <strong>Note:</strong> Select your organisation and enter its 6‑character registration token. If you don't have one, please contact your administrator.
+</div>
+
+<form method="post" action="/register">
+  <label>Email: <input type="email" name="email" required></label><br>
+  <label>Password: <input type="password" name="password" required></label><br>
+  <label>Organisation: 
+    <select name="organisation" id="orgSelect" required>
+      <option value="">-- Select Organisation --</option>
+      {{#each organisations}}
+        <option value="{{code}}" {{#if ../preselectedOrg}}{{#eq code ../preselectedOrg}}selected{{/eq}}{{/if}}>{{name}}</option>
+      {{/each}}
+    </select>
+  </label><br>
+  <label>Organisation Token:
+    <input type="text" name="orgToken" maxlength="6" pattern="[A-Za-z0-9]{6}" placeholder="e.g. ABC234" required class="uppercase"
+           title="Enter the 6-character token provided by your admin">
+  </label><br>
+  <button type="submit">Register</button>
+</form>
+<p>Already have an account? <a href="/login">Login</a></p>
+
+{{#if preselectedOrg}}
+<script>
+  // Auto-focus token field if org is preselected
+  document.addEventListener('DOMContentLoaded', () => {
+    const tokenInput = document.querySelector('input[name="orgToken"]');
+    if (tokenInput) tokenInput.focus();
+  });
+</script>
+{{/if}}

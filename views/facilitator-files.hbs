@@ -36,6 +36,7 @@
             <th><input type="checkbox" id="select-all"></th>
             <th>Icon</th>
             <th>Name</th>
+            <th>Active</th>
             <th>Type</th>
             <th>Category</th>
             <th>Size</th>
@@ -55,6 +56,7 @@
                     {{/if}}
                 </td>
                 <td>{{name}}</td>
+                <td class="text-center">{{#if active}}<span class="status-dot status-dot--active"></span>{{/if}}</td>
                 <td>{{group}}</td>
                 <td>{{category}}</td>
                 <td>{{formattedSize size}}</td>

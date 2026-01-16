@@ -1,0 +1,10 @@
+version: "2"
+
+authtoken: 2uwcnN5kLpVY7UnvkVHf48dyUMF_7zKCFD3hWLgBZ8MXhEonS
+
+tunnels:
+  myapp:
+    proto: http
+    addr: 3000
+    domain: singularly-glad-tortoise.ngrok-free.app
+    inspect: false

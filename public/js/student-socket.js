@@ -41,8 +41,6 @@ export class StudentSocket {
 
         // --- Session state from server
         this.socket.on("sessionState", (session) => {
-            console.log("📄 Received full session state:", session);
-
             // Fire callback if defined
             if (this.onSessionState) this.onSessionState(session);
 
@@ -54,10 +52,22 @@ export class StudentSocket {
             );
         });
 
+        // --- Lightweight session state (fallback for large payload drops)
+        this.socket.on("sessionStateLite", (session) => {
+
+            // Fire callback if defined
+            if (this.onSessionState) this.onSessionState(session);
+
+            // Also dispatch global event for StudentSession/UI
+            document.dispatchEvent(
+                new CustomEvent("sessionStateReceived", {
+                    detail: { ...session, __lite: true }
+                })
+            );
+        });
+
         // --- Asset sent by facilitator
         this.socket.on("receiveAsset", (asset) => {
-            console.log("📥 Asset received from facilitator:", asset);
-
             // Fire callback if defined
             if (this.onReceiveAsset) this.onReceiveAsset(asset);
 
@@ -65,6 +75,17 @@ export class StudentSocket {
             document.dispatchEvent(
                 new CustomEvent("assetReceived", {
                     detail: asset
+                })
+            );
+        });
+
+        // --- Templated content (B/E slides)
+        this.socket.on("templatedContentReceived", (data) => {
+
+            // Dispatch event for UI handling
+            document.dispatchEvent(
+                new CustomEvent("templatedContentReceived", {
+                    detail: data
                 })
             );
         });
@@ -91,12 +112,21 @@ export class StudentSocket {
         this.socket.on("errorMessage", (msg) => {
             console.warn("⚠️ Server error:", msg);
         });
+
+        // --- Removed by facilitator
+        this.socket.on("removedFromSession", (payload) => {
+            const reason = payload && payload.reason ? payload.reason : "You were removed from the session.";
+            alert(reason);
+            this.socket.disconnect();
+            const redirectUrl = `/student?sessionId=${encodeURIComponent(this.sessionId)}&removed=1`;
+            window.location.href = redirectUrl;
+        });
     }
 
     joinSession() {
         this.socket.emit("joinSession", {
             sessionId: this.sessionId,
-            type: "student",
+            role: "student",
             username: this.username
         });
     }

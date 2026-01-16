@@ -11,6 +11,7 @@ const http = require("http");                            // ✅ NEW
 const { connectDB, mongoose } = require("./controllers/databaseController");
 const { initSocket } = require("./controllers/socketController");
 const routes = require("./controllers/routeController");
+const localAccessController = require('./controllers/localAccessController');
 const hbsHelpers = require("./utils/hbsHelpers");
 const { updateAtlasIP } = require("./utils/atlas-ip-manager");
 
@@ -53,6 +54,15 @@ if (process.env.NODE_ENV === "development") {
         app.set("views", path.join(__dirname, "views"));
 
         // 4️⃣ Middleware
+        // Lightweight request logger (dev only)
+        if (process.env.NODE_ENV !== 'production') {
+            app.use((req, res, next) => {
+                try {
+                    console.log(`[REQ] ${req.method} ${req.originalUrl}`);
+                } catch (e) {}
+                next();
+            });
+        }
         app.use(express.urlencoded({ extended: true }));
         app.use(express.json());
         app.use(express.static(path.join(__dirname, "public")));
@@ -65,14 +75,52 @@ if (process.env.NODE_ENV === "development") {
                 saveUninitialized: false,
                 store: MongoStore.create({
                     client: mongoose.connection.getClient(),
-                    collectionName: "sessions",
+                    collectionName: "http_sessions", // Changed from "sessions" to avoid collision with Session model
                     ttl: 14 * 24 * 60 * 60, // 14 days
                 }),
             })
         );
         app.use(flash());
 
-        // 6️⃣ Routes
+        // 6️⃣ Middleware: Block non-student routes when accessed via ngrok URL
+        if (process.env.NODE_ENV === 'development' && process.env.PUBLIC_URL) {
+            const ngrokHost = new URL(process.env.PUBLIC_URL).host;
+            app.use((req, res, next) => {
+                const requestHost = req.get('host');
+                const isNgrok = requestHost === ngrokHost;
+                
+                if (isNgrok) {
+                    const path = req.path.toLowerCase();
+                    // Allow student routes, assets, uploaded files, and socket.io
+                    const allowedPaths = [
+                        '/student',
+                        '/dev-student',
+                        '/facilitator',
+                        '/register',
+                        '/css/',
+                        '/js/',
+                        '/files/',      // Uploaded assets served from /files route
+                        '/socket.io/',
+                        '/favicon.ico'
+                    ];
+                    
+                    // Allow organization-scoped student entry: /:org/:token or /:org/:sessionId
+                    const isOrgStudentPath = /^\/[^\/]+\/[^\/]+$/.test(path);
+                    
+                    const isAllowed = allowedPaths.some(p => path.startsWith(p)) || isOrgStudentPath;
+                    
+                    if (!isAllowed) {
+                        return res.status(403).render('ngrok-forbidden', { 
+                            layout: false,
+                            requestedPath: req.path 
+                        });
+                    }
+                }
+                next();
+            });
+        }
+
+        // 7️⃣ Routes
         app.use("/", routes);
 
         // ✅✅✅ 7️⃣ Create HTTP server (instead of app.listen)

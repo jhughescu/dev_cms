@@ -1,0 +1,144 @@
+<div class="dev-student-container">
+    <h1>🧑‍💻 Dev Student Interface</h1>
+    <p>Select a session to join as a student (for testing)</p>
+
+    {{#if sessions}}
+        <div class="session-list">
+            {{#each sessions}}
+                <div class="session-card">
+                    <div class="session-header">
+                        <h3>{{this.sessionId}}</h3>
+                        <span class="facilitator-badge">👤 {{this.facilitator}}</span>
+                    </div>
+                    <div class="session-info">
+                        <p><strong>Connected Students:</strong> {{this.students.length}}</p>
+                        <p><small>Created: {{formatDate this.createdAt}}</small></p>
+                        <p><small>Updated: {{formatDate this.updatedAt}}</small></p>
+                    </div>
+                    <div class="session-actions">
+                        <form class="form-inline" method="GET" action="/student">
+                            <input type="hidden" name="sessionId" value="{{this.sessionId}}">
+                            <label>
+                                Username: 
+                                <input type="text" name="username" placeholder="test-student-{{@index}}" value="test-student-{{@index}}" required>
+                            </label>
+                            <button type="submit" class="join-btn">Join Session</button>
+                        </form>
+                    </div>
+                </div>
+            {{/each}}
+        </div>
+    {{else}}
+        <div class="no-sessions">
+            <p>No active sessions available.</p>
+            <p><small>Create a session from the facilitator dashboard first.</small></p>
+        </div>
+    {{/if}}
+</div>
+
+<style>
+    .dev-student-container {
+        max-width: 1200px;
+        margin: 2rem auto;
+        padding: 2rem;
+    }
+    
+    .session-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 1.5rem;
+        margin-top: 2rem;
+    }
+    
+    .session-card {
+        border: 2px solid #ddd;
+        border-radius: 8px;
+        padding: 1.5rem;
+        background: #f9f9f9;
+        transition: all 0.2s;
+    }
+    
+    .session-card:hover {
+        border-color: #4CAF50;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    .session-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid #ddd;
+    }
+    
+    .session-header h3 {
+        margin: 0;
+        color: #333;
+        font-size: 1.2rem;
+    }
+    
+    .facilitator-badge {
+        background: #2196F3;
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 12px;
+        font-size: 0.85rem;
+    }
+    
+    .session-info {
+        margin-bottom: 1rem;
+    }
+    
+    .session-info p {
+        margin: 0.5rem 0;
+        color: #555;
+    }
+    
+    .session-info small {
+        color: #888;
+    }
+    
+    .session-actions form {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    
+    .session-actions label {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+        font-size: 0.9rem;
+        color: #555;
+    }
+    
+    .session-actions input[type="text"] {
+        padding: 0.5rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 0.95rem;
+    }
+    
+    .join-btn {
+        background: #4CAF50;
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 1rem;
+        font-weight: 500;
+        transition: background 0.2s;
+    }
+    
+    .join-btn:hover {
+        background: #45a049;
+    }
+    
+    .no-sessions {
+        text-align: center;
+        padding: 3rem;
+        color: #888;
+    }
+</style>

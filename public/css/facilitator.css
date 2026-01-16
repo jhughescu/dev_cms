@@ -16,3 +16,176 @@
 #student-list li[idle] {
   opacity: 0.5;
 }
+
+/* ===== Session Editor Components ===== */
+
+/* Asset Thumbnails */
+.asset-thumbnail {
+    width: 100px;
+    height: 100px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    cursor: pointer;
+    background: #f0f0f0;
+    position: relative;
+    overflow: hidden;
+}
+
+.asset-thumbnail__wrapper {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+}
+
+.asset-thumbnail__image {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: cover;
+}
+
+.asset-thumbnail__placeholder {
+    font-size: 3em;
+    color: #999;
+}
+
+.asset-thumbnail__close {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    background-color: #c0392b;
+    color: white;
+    border: none;
+    border-radius: 0 4px 0 4px;
+    cursor: pointer;
+    font-size: 18px;
+    font-weight: bold;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    line-height: 1;
+    z-index: 10000;
+    pointer-events: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.asset-thumbnail__close--visible {
+    opacity: 1;
+}
+
+.asset-thumbnail--highlighted {
+    box-shadow: 0 0 0 3px #007bff;
+    transform: scale(1.05);
+}
+
+/* Asset List */
+.asset-list-item {
+    padding: 0.5em 0;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.asset-list-item__name {
+    flex: 1;
+    cursor: pointer;
+}
+
+.asset-list-item__name--bold {
+    font-weight: bold;
+}
+
+.asset-list-item__remove {
+    color: #c0392b;
+    text-decoration: none;
+    font-size: 0.9em;
+    margin-left: 0.5em;
+}
+
+/* Slide Thumbnails */
+.slide-thumbnail {
+    width: 50px;
+    height: 50px;
+    background: #007bff;
+    border-radius: 4px;
+    border: 2px solid #0056b3;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    font-size: 12px;
+    opacity: 0.5;
+    transition: all 0.2s ease;
+}
+
+.slide-thumbnail--focused {
+    opacity: 1;
+    border-color: #28a745;
+    transform: scale(1.1);
+}
+
+/* Button States */
+.button--disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.button--hidden {
+    display: none;
+}
+
+/* File Browser */
+.file-thumbnail {
+    width: 40px;
+    height: 40px;
+    object-fit: cover;
+    border-radius: 4px;
+}
+
+.file-thumbnail--fallback {
+    display: none;
+    color: #999;
+}
+
+.file-icon {
+    font-size: 1.5em;
+}
+
+.file-icon--placeholder {
+    color: #999;
+    font-size: 0.8em;
+}
+
+.file-active-badge {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #28a745;
+}
+
+.text-center {
+    text-align: center;
+}
+
+/* Student List */
+.student-list-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    padding: 10px;
+}
+
+.student-list-item--idle {
+    opacity: 0.5;
+}

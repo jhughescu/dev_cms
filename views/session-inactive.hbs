@@ -1,0 +1,10 @@
+<div class="card text-center">
+    <h1>Session Not Active</h1>
+    {{#if sessionId}}
+        <p>Session <strong>{{sessionId}}</strong> is not currently active.</p>
+    {{else}}
+        <p>This session is not currently active.</p>
+    {{/if}}
+    <p>Please contact your facilitator or try again later.</p>
+    <a href="/" class="mt-1" style="display:inline-block;">Return Home</a>
+</div>

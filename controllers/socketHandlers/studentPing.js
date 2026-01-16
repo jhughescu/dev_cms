@@ -16,6 +16,7 @@ async function handleStudentPing(io, socket, { sessionId, username }, socketSess
     }
 
     student.lastActive = new Date();
+    student.connected = true;  // Ensure they're marked as connected on ping
     if (!student.joinedAt) student.joinedAt = new Date();
     await session.save();
 

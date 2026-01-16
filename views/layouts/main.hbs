@@ -8,13 +8,17 @@
     <link rel="stylesheet" href="/css/style.css" />
 </head>
 
-<body>
+<body{{#if sessionId}} data-session-id="{{sessionId}}"{{/if}}{{#if facilitator}} data-username="{{facilitator}}"{{/if}}>
     <header>
         <h1>Simple CMS Uploader</h1>
         <nav>
             <a href="/">Home</a>
             <a href="/upload">Upload</a>
             <a href="/files">Files</a>
+            <!-- Quick logout button for dev/testing -->
+            <form method="post" action="/logout" style="display:inline; margin-left:12px;">
+                <button type="submit" style="background:#c0392b;color:#fff;border:none;padding:6px 10px;border-radius:4px;cursor:pointer;">Logout</button>
+            </form>
         </nav>
     </header>
 

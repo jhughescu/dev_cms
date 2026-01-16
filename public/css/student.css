@@ -1,3 +1,103 @@
-img {
-    width: 300px;
+/* Student view container */
+.student-container {
+    padding: 0;
+    margin: 0;
+}
+
+/* Thumbnail gallery */
+#thumbnail-gallery {
+    scrollbar-width: thin;
+    scrollbar-color: #888 #f5f5f5;
+}
+
+#thumbnail-gallery::-webkit-scrollbar {
+    height: 8px;
+}
+
+#thumbnail-gallery::-webkit-scrollbar-track {
+    background: #f5f5f5;
+}
+
+#thumbnail-gallery::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+#thumbnail-gallery::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* Thumbnail items */
+.thumbnail-item {
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+}
+
+.thumbnail-item img {
+    pointer-events: none;
+    -webkit-user-drag: none;
+    user-select: none;
+}
+
+/* Preview container protection */
+#asset-preview img {
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    pointer-events: none;
+    -webkit-user-drag: none;
+}
+
+/* Re-enable pointer events for video/audio controls in preview */
+#asset-preview video,
+#asset-preview audio {
+    pointer-events: auto;
+}
+
+/* Overlay protection for preview images */
+#asset-preview {
+    position: relative;
+}
+
+#asset-preview > img {
+    position: relative;
+}
+
+/* Optional: Add a subtle overlay to prevent easy screenshot/copy attempts */
+#asset-preview::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 0;
+}
+
+#asset-preview > * {
+    position: relative;
+    z-index: 1;
+}
+
+/* Asset Display */
+.asset-wrapper {
+    margin-bottom: 20px;
+}
+
+.asset-image {
+    max-width: 100%;
+    border: 1px solid #ccc;
+}
+
+.asset-iframe {
+    width: 100%;
+    height: 500px;
+}
+
+.asset-video {
+    width: 100%;
 }

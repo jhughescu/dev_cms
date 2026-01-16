@@ -36,7 +36,7 @@ export class StudentUI {
         }
 
         const wrapper = document.createElement("div");
-        wrapper.style.marginBottom = "20px";
+        wrapper.className = "asset-wrapper";
 
         const title = document.createElement("p");
         title.textContent = `Received: ${asset.originalName}`;
@@ -44,23 +44,21 @@ export class StudentUI {
 
         if (asset.mimetype.startsWith("image/")) {
             const img = document.createElement("img");
+            img.className = "asset-image";
             img.src = asset.url;
-            img.style.maxWidth = "100%";
-            img.style.border = "1px solid #ccc";
             wrapper.appendChild(img);
 
         } else if (asset.mimetype === "application/pdf") {
             const iframe = document.createElement("iframe");
+            iframe.className = "asset-iframe";
             iframe.src = asset.url;
-            iframe.style.width = "100%";
-            iframe.style.height = "500px";
             wrapper.appendChild(iframe);
 
         } else if (asset.mimetype.startsWith("video/")) {
             const video = document.createElement("video");
+            video.className = "asset-video";
             video.src = asset.url;
             video.controls = true;
-            video.style.width = "100%";
             wrapper.appendChild(video);
 
         } else if (asset.mimetype.startsWith("audio/")) {

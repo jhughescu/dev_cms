@@ -69,6 +69,11 @@
                         Size (KB) {{sortArrow sort dir 'size'}}
                     </a>
                 </th>
+                <th class="col-project">
+                    <a href="{{buildQueryUrl '/files' (mergeQuery query 'sort' 'project' 'dir' (nextDir sort dir 'project'))}}">
+                        Project {{sortArrow sort dir 'project'}}
+                    </a>
+                </th>
                 <th class="col-uploaded">
                     <a href="{{buildQueryUrl '/files' (mergeQuery query 'sort' 'uploadedAt' 'dir' (nextDir sort dir 'uploadedAt'))}}">
                         Uploaded {{sortArrow sort dir 'uploadedAt'}}
@@ -91,6 +96,7 @@
                     <td class="col-name-stored" title="{{filename}}">{{truncate filename 15}}</td>
                     <td class="col-type">{{fileTypeLabel mimetype}}</td>
                     <td class="col-size">{{formatKB size}}</td>
+                    <td class="col-project">{{project}}</td>
                     <td class="col-uploaded">{{formatDate uploadedAt}}</td>
                     <td class="col-actions">
                         <button type="button" class="meta-toggle-btn" data-target="{{_id}}">ℹ️</button>
@@ -99,7 +105,7 @@
                 </tr>
 
                 <tr id="meta-{{_id}}" class="meta-row">
-                    <td colspan="7">
+                    <td colspan="8">
                         <div class="meta-content">
                             <div class="meta-grid">
                                 <div><strong>Uploaded By:</strong>
@@ -120,6 +126,11 @@
                                 <div><strong>Category:</strong>
                                     <span class="{{#unless category}}placeholder{{/unless}}">
                                         {{#if category}}{{category}}{{else}}none{{/if}}
+                                    </span>
+                                </div>
+                                <div><strong>Organisation:</strong>
+                                    <span class="{{#unless organisation}}placeholder{{/unless}}">
+                                        {{#if organisation}}{{organisation}}{{else}}default{{/if}}
                                     </span>
                                 </div>
                                 <div><strong>Safe Filename:</strong>

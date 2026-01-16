@@ -27,6 +27,18 @@
             <option value="other">Other</option>
         </select>
     </div>
+
+    <div class="form-group">
+        <label for="organisation">Organisation:</label>
+        <select name="organisation" id="organisation" required>
+            <option value="">Choose an organisation...</option>
+            <option value="all">All Organisations</option>
+            {{#each organisations}}
+                <option value="{{this.code}}">{{this.name}}</option>
+            {{/each}}
+        </select>
+    </div>
+
 <div class="form-group">
     {{!-- Optional developer uploader field --}}
     <input type="text" name="uploadedBy" value="{{devUploader}}" />

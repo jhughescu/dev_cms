@@ -1,6 +1,7 @@
 // controllers/facilitatorController.js
 
 const File = require("../models/metadataModel"); // <<-- use your existing metadataModel.js
+const Session = require("../models/sessionModel");
 
 // --- Helper Functions ---
 
@@ -40,8 +41,24 @@ exports.getFileBrowserJson = async function(req, res) {
                 "project instance category uploadedBy detectedType dimensions"
             );
 
+        // Optional sessionId to mark active assets (currentState)
+        const sessionId = req.query.sessionId;
+        let activeIds = new Set();
+        if (sessionId) {
+            try {
+                const session = await Session.findOne({ sessionId }).lean();
+                if (session && Array.isArray(session.currentState)) {
+                    activeIds = new Set(session.currentState.map(id => String(id)));
+                }
+            } catch (err) {
+                console.warn('[getFileBrowserJson] Unable to load session for active markers:', err);
+            }
+        }
+
         const mapped = files.map(f => {
             const ext = (f.originalName.split('.').pop() || "").toLowerCase();
+
+            const isActive = activeIds.has(String(f._id));
 
             return {
                 id: f._id,
@@ -58,6 +75,7 @@ exports.getFileBrowserJson = async function(req, res) {
                 category: f.category || "none",
                 uploadedBy: f.uploadedBy,
                 dimensions: f.dimensions || null,
+                active: isActive,
 
                 // Derived UI values
                 icon: mapIcon(ext, f.detectedType),

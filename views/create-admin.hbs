@@ -1,0 +1,8 @@
+<h2>Create Admin</h2>
+{{#if error_msg}}<div class="error">{{error_msg}}</div>{{/if}}
+<form method="post" action="/create-admin">
+  <label>Email: <input type="email" name="email" required></label><br>
+  <label>Password: <input type="password" name="password" required></label><br>
+  <button type="submit">Create Admin</button>
+</form>
+<p>Note: This page is guarded by `ADMIN_OVERRIDE=true` or by an existing admin session.</p>

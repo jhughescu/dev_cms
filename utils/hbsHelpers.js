@@ -1,3 +1,4 @@
+    
 // utils/hbsHelpers.js
 
 module.exports = {
@@ -87,6 +88,13 @@ module.exports = {
         }
     },
     or: (a, b) => a || b,
+    // Equality helper alias used in templates (block or inline)
+    eq: (a, b, options) => {
+        if (options && typeof options.fn === "function") {
+            return a == b ? options.fn(this) : options.inverse(this);
+        }
+        return a == b;
+    },
     ifEq: (a, b, options) => {
         // If used as a block helper
         if (options && typeof options.fn === "function") {
@@ -149,5 +157,7 @@ module.exports = {
     formattedDate: (date) => {
         return new Date(date).toLocaleString();
     },
-    isImage: mimetype => mimetype.startsWith('image/')
+    isImage: mimetype => mimetype.startsWith('image/'),
+    // --- Reverse an array (for latest-first display) ---
+    reverse: arr => Array.isArray(arr) ? arr.slice().reverse() : arr,
 };

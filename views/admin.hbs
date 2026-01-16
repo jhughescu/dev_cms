@@ -1,0 +1,32 @@
+<h1>{{title}}</h1>
+
+<div class="card card--flush">
+  <a href="/admin/organisations"><strong>⚙️ Manage Organisations</strong></a>
+</div>
+
+<style>
+  /* Admin panel styles */
+  #admin-left { padding-right: 0.5rem; }
+  .session-item.selected { background: #e8f0ff; }
+  .session-item:hover { background: #f5f7ff; }
+  #session-console { max-height: calc(100vh - 200px); overflow:auto; }
+</style>
+
+<div class="view-grid">
+  <section id="admin-left" style="width:320px;">
+    <h2>Sessions</h2>
+    <div id="session-list-container">{{{sessionListHtml}}}</div>
+  </section>
+
+  <section id="admin-right" class="col-2">
+    <h2>Session Console</h2>
+    <div id="session-console" style="white-space:pre-wrap; font-family:monospace; background:#f7f7f7; padding:1rem; border:1px solid #ddd; min-height:300px; overflow:auto;">
+      <em>Select a session on the left to view its history.</em>
+    </div>
+  </section>
+</div>
+
+<p class="mt-1"><a href="/facilitator">Back to facilitator</a></p>
+
+<script src="/socket.io/socket.io.js"></script>
+<script type="module" src="/js/admin.js"></script>

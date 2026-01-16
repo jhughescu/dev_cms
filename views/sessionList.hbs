@@ -1,0 +1,18 @@
+{{!-- Compact session list fragment: clickable items only showing session id and facilitator --}}
+{{#if sessions.length}}
+  <ul class="session-list" style="list-style:none; padding:0; margin:0;">
+    {{#each sessions}}
+      <li class="session-item" data-sessionid="{{sessionId}}" data-facilitator="{{facilitator}}" style="padding:0.5rem; border-bottom:1px solid #eee; cursor:pointer;">
+        <div class="inline-wrap" style="justify-content:space-between;">
+          <div>
+            <strong>{{sessionId}}</strong>
+            <div class="text-muted">{{#if facilitator}}{{facilitator}}{{else}}<em>—</em>{{/if}}</div>
+          </div>
+          <div class="text-muted">{{currentState.length}} items</div>
+        </div>
+      </li>
+    {{/each}}
+  </ul>
+{{else}}
+  <p>No sessions found.</p>
+{{/if}}

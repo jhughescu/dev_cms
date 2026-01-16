@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{title}}</title>
+    <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body class="student-welcome" {{#if sessionId}}data-session-id="{{sessionId}}"{{/if}}>
+    <main class="card" style="max-width:540px;margin:3rem auto;">
+        <h1 style="margin-top:0;">Welcome</h1>
+        {{#if error_msg}}
+            <p class="alert alert-error">{{error_msg}}</p>
+        {{/if}}
+        {{#if removed}}
+            <p class="alert alert-error">You were removed from the session. Please re-enter your name to rejoin.</p>
+        {{else}}
+            <p>Enter your name to join the session.</p>
+        {{/if}}
+
+        <form method="post" action="/student/welcome">
+            <input type="hidden" name="sessionId" value="{{sessionId}}" />
+            <label class="form-label">Your name
+                <input class="form-control" id="student-name-input" name="username" type="text" placeholder="e.g. Alex" required />
+            </label>
+            <button type="submit">Join Session</button>
+        </form>
+    </main>
+    <script>
+        // Prefill name from localStorage if available
+        (function() {
+            try {
+                const stored = localStorage.getItem('studentUsername');
+                if (stored) {
+                    const input = document.getElementById('student-name-input');
+                    if (input) input.value = stored;
+                }
+            } catch (e) {}
+        })();
+    </script>
+</body>
+</html>

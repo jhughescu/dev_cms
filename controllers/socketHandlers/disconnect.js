@@ -1,8 +1,6 @@
 const Session = require("../../models/sessionModel");
 
 async function handleDisconnect(io, socket, socketSessions) {
-    console.log("Socket disconnected:", socket.id);
-
     const session = await Session.findOne({ "students.socketId": socket.id });
     if (session) {
         const student = session.students.find(s => s.socketId === socket.id);
@@ -22,8 +20,6 @@ async function handleDisconnect(io, socket, socketSessions) {
             if (facSock) {
                 io.to(facSock).emit("studentListUpdated", session.students);
             }
-
-            console.log(`Student ${student.username} disconnected from ${session.sessionId}`);
         }
     }
 

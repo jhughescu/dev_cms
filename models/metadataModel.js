@@ -52,7 +52,10 @@ const fileSchema = new mongoose.Schema({
         required: true,
         default: process.env.UPLOAD_BY_DEV || "superuser"
     },
-
+    organisation: {
+        type: String,
+        default: "default"
+    },
     detectedType: {
         type: String,
         default: "Other"

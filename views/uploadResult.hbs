@@ -7,10 +7,11 @@
     <li><strong>Stored Filename:</strong> {{file.filename}}</li>
     <li><strong>Type:</strong> {{file.mimetype}}</li>
     <li><strong>Size:</strong> {{file.size}} bytes</li>
+    <li><strong>Organisation:</strong> {{file.organisation}}</li>
     <li><strong>URL:</strong> <a href="{{file.url}}">{{file.url}}</a></li>
   </ul>
 {{else}}
-  <p style="color:red;">Upload failed or duplicate file detected.</p>
+  <p class="alert alert-error">Upload failed or duplicate file detected.</p>
   {{#if duplicateOf}}
     <h4>Existing File Info:</h4>
     <ul>
